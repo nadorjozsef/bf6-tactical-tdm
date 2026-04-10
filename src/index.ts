@@ -6,6 +6,10 @@ import { Vectors } from 'bf6-portal-utils/vectors/index.ts';
 
 import { DebugTool } from './debug-tool/index.ts';
 import { getPlayerStateVectorString } from './helpers/index.ts';
+import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
+import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
+import { UI } from 'bf6-portal-utils/ui/index.ts';
+import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
 
 let adminDebugTool: DebugTool | undefined;
 let telemetryInterval: number | undefined;
@@ -183,3 +187,113 @@ Events.OnPlayerLeaveGame.subscribe(destroyAdminDebugTool);
 
 // Event subscriptions for notifying players of their name and the current map.
 Events.OnPlayerDeployed.subscribe(handlePlayerDeployed);
+
+const playerLives: Map<number, number> = new Map();
+let nextReinforcementsTime = 60;
+
+Events.OnPlayerJoinGame.subscribe(initializePlayer);
+Events.OnMandown.subscribe(handlePlayerDown);
+Events.OnGameModeStarted.subscribe(startCountDownClock);
+
+function startCountDownClock(): void {
+    nextReinforcementsClock.start();
+}
+
+const nextReinforcementsClock = new Clocks.CountDownClock(60, {
+    onSecond: (seconds) => updateNextReinforcementDisplay(seconds),
+    onComplete: () => handleReinforcementsArrived(),
+});
+
+function updateNextReinforcementDisplay(seconds: number): void {
+    adminDebugTool?.dynamicLog(`updateNextReinforcementDisplay`);
+    updateText(displayReinforcementsText, seconds.toString());
+    adminDebugTool?.dynamicLog(`Next reinforcements in: ${seconds} seconds`);
+}
+
+function handleReinforcementsArrived(): void {
+    adminDebugTool?.dynamicLog(`handleReinforcementsArrived`);
+    for (const [playerId, lives] of playerLives) {
+        if (lives === 0) {
+            playerLives.set(playerId, 2);
+            updateText(displayLifeText, '2');
+        }
+    }
+    mod.EnableAllPlayerDeploy(true);
+    nextReinforcementsClock.reset().start();
+}
+
+function initializePlayer(player: mod.Player): void {
+    adminDebugTool?.dynamicLog(`initializePlayer`);
+    playerLives.set(mod.GetObjId(player), 2);
+    displayLife(player);
+    displayNextReinforcements();
+}
+
+function handlePlayerDown(player: mod.Player): void {
+    adminDebugTool?.dynamicLog(`handlePlayerDown`);
+    adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} down. Total lives (before): ${playerLives.get(mod.GetObjId(player))}`);
+    const lives = playerLives.get(mod.GetObjId(player))! - 1;
+    playerLives.set(mod.GetObjId(player), lives);
+    adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} down. Total lives (after): ${lives}`);
+    if (lives === 0) {
+        adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} has died, disabling deploy.`);
+        mod.EnablePlayerDeploy(player, false);
+    }
+    updateText(displayLifeText, lives.toString());
+}
+
+let displayLifeText: UIText | undefined;
+let displayReinforcementsText: UIText | undefined;
+
+function updateText(uiText: UIText | undefined, newText: string) {
+    adminDebugTool?.dynamicLog(`updateText called with newText: ${newText}`);
+    if (!uiText) return;
+    const widget = uiText.uiWidget;
+    mod.SetUITextLabel(widget, mod.Message(mod.stringkeys.lifeCount, newText));
+}
+
+function displayLife(player: mod.Player): void {
+    adminDebugTool?.dynamicLog(`displayLife`);
+    const container = new UIContainer({
+        width: 300,
+        height: 100,
+        bgColor: UI.COLORS.BLACK,
+        bgAlpha: 0.8,
+        visible: true,
+        position: { x: 0, y: 100 },
+        anchor: mod.UIAnchor.TopCenter,
+        receiver: player,
+    });
+
+    displayLifeText = new UIText({
+        message: mod.Message(mod.stringkeys.lifeCount, playerLives.get(mod.GetObjId(player))!.toString()),
+        textSize: 30,
+        textColor: UI.COLORS.WHITE,
+        receiver: player,
+        parent: container,
+    });
+
+    container.show();
+}
+
+function displayNextReinforcements(): void {
+    adminDebugTool?.dynamicLog(`displayNextReinforcements`);
+    const container2 = new UIContainer({
+        width: 300,
+        height: 100,
+        bgColor: UI.COLORS.BLACK,
+        bgAlpha: 0.8,
+        visible: true,
+        position: { x: 0, y: 100 },
+        anchor: mod.UIAnchor.TopRight,
+    });
+
+    displayReinforcementsText = new UIText({
+        message: mod.Message(mod.stringkeys.nextReinforcementsTimer, nextReinforcementsTime.toString()),
+        textSize: 30,
+        textColor: UI.COLORS.WHITE,
+        parent: container2,
+    });
+
+    container2.show();
+}

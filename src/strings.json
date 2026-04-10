@@ -30,5 +30,7 @@
             "Saints Quarter": "Saints Quarter",
             "Siege of Cairo": "Siege of Cairo"
         }
-    }
+    },
+    "lifeCount": "Life: {}",
+    "nextReinforcementsTimer": "Next in {}"
 }
