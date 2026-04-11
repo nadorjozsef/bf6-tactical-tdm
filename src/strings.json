@@ -31,6 +31,13 @@
             "Siege of Cairo": "Siege of Cairo"
         }
     },
+    "scoreboard": {
+            "lives": "Lives",
+            "score": "Score",
+            "kills": "Kills",
+            "team1": "Team 1",
+            "team2": "Team 2"
+        },
     "lifeCount": "Life: {}",
     "nextReinforcementsTimer": "Next reinforcements in {} seconds" 
 }
