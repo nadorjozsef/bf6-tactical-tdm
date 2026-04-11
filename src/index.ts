@@ -9,7 +9,7 @@ import { UI } from 'bf6-portal-utils/ui/index.ts';
 import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
 import { getAllPlayers } from './helpers/index.ts';
 
-const DEFAULT_PLAYER_LIVES = 2;
+const DEFAULT_PLAYER_LIVES = 1;
 const DEFAULT_REINFORCEMENTS_TIME = 60;
 
 let adminDebugTool: DebugTool | undefined;
@@ -72,6 +72,7 @@ function handleGameModeStarted(): void {
     mod.SetScoreboardHeader(mod.Message(mod.stringkeys.scoreboard.team1), mod.Message(mod.stringkeys.scoreboard.team2));
     mod.SetScoreboardColumnNames(mod.Message(mod.stringkeys.scoreboard.score), mod.Message(mod.stringkeys.scoreboard.kills), mod.Message(mod.stringkeys.scoreboard.lives));
     mod.SetScoreboardColumnWidths(1, 1, 1);
+    displayNextReinforcementsWidget();
 }
 
 function updateScoreboard(player: mod.Player): void {
@@ -96,30 +97,27 @@ function updateNextReinforcementDisplay(seconds: number): void {
 
 function handleReinforcementsArrived(): void {
     for (const player of getAllPlayers()) {
-        const lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
-
-        if (lives === 0) {
-            mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), DEFAULT_PLAYER_LIVES);
-            updateLivesText(DEFAULT_PLAYER_LIVES);
-            updateScoreboard(player);
-            mod.EnablePlayerDeploy(player, true);
-        }
+        let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
+        lives += DEFAULT_PLAYER_LIVES;
+        mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), lives);
+        updateLivesText(lives);
+        updateScoreboard(player);
     }
+    mod.EnableAllPlayerDeploy(true);
     nextReinforcementsClock.reset().start();
 }
 
 function handlePlayerJoinGame(player: mod.Player): void {
     mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), DEFAULT_PLAYER_LIVES);
     displayLifeWidget(player);
-    displayNextReinforcementsWidget();
     updateScoreboard(player);
 }
 
 function handleManDown(player: mod.Player): void {
     let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
-    lives -= 1;
+    if (lives >= 1) lives--;
     mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), lives);
-    if (lives === 0) {
+    if (lives <= 0) {
         mod.EnablePlayerDeploy(player, false);
     }
     updateLivesText(lives);
@@ -145,7 +143,7 @@ function displayLifeWidget(player: mod.Player): void {
         bgAlpha: 0.8,
         visible: true,
         depth: mod.UIDepth.AboveGameUI,
-        position: { x: 0, y: 50 },
+        position: { x: 0, y: 130 },
         anchor: mod.UIAnchor.TopCenter,
         receiver: player,
     });
@@ -173,7 +171,7 @@ function displayNextReinforcementsWidget(): void {
         visible: true,
         depth: mod.UIDepth.AboveGameUI,
         position: { x: 0, y: 50 },
-        anchor: mod.UIAnchor.TopRight
+        anchor: mod.UIAnchor.TopCenter,
     });
 
     reinforcementsText = new UIText({
