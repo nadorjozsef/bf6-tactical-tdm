@@ -26,7 +26,7 @@ function createAdminDebugTool(player: mod.Player): void {
     // Create a debug tool with a static logger visible by default.
     const debugToolOptions: DebugTool.Options = {
         staticLogger: {
-            visible: true,
+            visible: false,
         },
         dynamicLogger: {
             visible: false,
@@ -112,6 +112,7 @@ function handlePlayerJoinGame(player: mod.Player): void {
     mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), DEFAULT_PLAYER_LIVES);
     displayLifeWidget(player);
     displayNextReinforcementsWidget();
+    updateScoreboard(player);
 }
 
 function handleManDown(player: mod.Player): void {
@@ -137,12 +138,13 @@ function updateReinforcementsText(newValue: number) {
 
 function displayLifeWidget(player: mod.Player): void {
     const container = new UIContainer({
-        width: 300,
+        width: 100,
         height: 80,
         bgColor: UI.COLORS.BLACK,
         bgFill: mod.UIBgFill.Solid,
         bgAlpha: 0.8,
         visible: true,
+        depth: mod.UIDepth.AboveGameUI,
         position: { x: 0, y: 50 },
         anchor: mod.UIAnchor.TopCenter,
         receiver: player,
@@ -153,33 +155,33 @@ function displayLifeWidget(player: mod.Player): void {
     livesText = new UIText({
         message: mod.Message(mod.stringkeys.lifeCount, lifeCount),
         textSize: 20,
+        width: 80,
         textColor: UI.COLORS.WHITE,
         receiver: player,
         parent: container,
     });
-
     container.show();
 }
 
 function displayNextReinforcementsWidget(): void {
     const container = new UIContainer({
-        width: 600,
+        width: 300,
         height: 80,
         bgColor: UI.COLORS.BLACK,
         bgFill: mod.UIBgFill.Solid,
         bgAlpha: 0.8,
         visible: true,
+        depth: mod.UIDepth.AboveGameUI,
         position: { x: 0, y: 50 },
-        anchor: mod.UIAnchor.TopRight,
+        anchor: mod.UIAnchor.TopRight
     });
 
     reinforcementsText = new UIText({
         message: mod.Message(mod.stringkeys.nextReinforcementsTimer, nextReinforcementsTime),
         textSize: 20,
-        width: 580,
+        width: 280,
         textColor: UI.COLORS.WHITE,
         parent: container,
     });
-
     container.show();
 }
