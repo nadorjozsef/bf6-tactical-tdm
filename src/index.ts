@@ -206,7 +206,7 @@ const nextReinforcementsClock = new Clocks.CountDownClock(60, {
 
 function updateNextReinforcementDisplay(seconds: number): void {
     adminDebugTool?.dynamicLog(`updateNextReinforcementDisplay`);
-    updateText(displayReinforcementsText, seconds.toString());
+    updateText2(displayReinforcementsText, seconds.toString());
     adminDebugTool?.dynamicLog(`Next reinforcements in: ${seconds} seconds`);
 }
 
@@ -250,6 +250,13 @@ function updateText(uiText: UIText | undefined, newText: string) {
     if (!uiText) return;
     const widget = uiText.uiWidget;
     mod.SetUITextLabel(widget, mod.Message(mod.stringkeys.lifeCount, newText));
+}
+
+function updateText2(uiText: UIText | undefined, newText: string) {
+    adminDebugTool?.dynamicLog(`updateText called with newText: ${newText}`);
+    if (!uiText) return;
+    const widget = uiText.uiWidget;
+    mod.SetUITextLabel(widget, mod.Message(mod.stringkeys.nextReinforcementsTimer, newText));
 }
 
 function displayLife(player: mod.Player): void {
