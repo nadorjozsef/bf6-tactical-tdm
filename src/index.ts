@@ -14,6 +14,8 @@ const DEFAULT_REINFORCEMENTS_TIME = 60;
 
 let adminDebugTool: DebugTool | undefined;
 const LivesPlayerVar = 0;
+const ScorePlayerVar = 1;
+const KillsPlayerVar = 2;
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let livesText: UIText | undefined;
 let reinforcementsText: UIText | undefined;
@@ -58,12 +60,19 @@ function destroyAdminDebugTool(playerId: number): void {
 Events.OnPlayerJoinGame.subscribe(createAdminDebugTool);
 Events.OnPlayerLeaveGame.subscribe(destroyAdminDebugTool);
 Events.OnPlayerJoinGame.subscribe(handlePlayerJoinGame);
-Events.OnMandown.subscribe(handleManDown);
+Events.OnPlayerUndeploy.subscribe(handlePlayerDied);
+
 Events.OnGameModeStarted.subscribe(startCountDownClock);
 Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
 
-function handlePlayerEarnedKill(player: mod.Player): void {
+function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
+    if (player === victim) return;
+    const playerScore = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
+    mod.SetVariable(mod.ObjectVariable(player, ScorePlayerVar), playerScore + 100);
+    const team = mod.GetTeam(player);
+    const gameModeScore = mod.GetGameModeScore(team);
+    mod.SetGameModeScore(team, gameModeScore + 100);
     updateScoreboard(player);
 }
 
@@ -72,12 +81,16 @@ function handleGameModeStarted(): void {
     mod.SetScoreboardHeader(mod.Message(mod.stringkeys.scoreboard.team1), mod.Message(mod.stringkeys.scoreboard.team2));
     mod.SetScoreboardColumnNames(mod.Message(mod.stringkeys.scoreboard.score), mod.Message(mod.stringkeys.scoreboard.kills), mod.Message(mod.stringkeys.scoreboard.lives));
     mod.SetScoreboardColumnWidths(1, 1, 1);
+
+    mod.SetGameModeTargetScore(1000);
+    mod.SetGameModeTimeLimit(600);
+
     displayNextReinforcementsWidget();
 }
 
 function updateScoreboard(player: mod.Player): void {
-    const score = mod.GetGameModeScore(player);
-    const kills = mod.GetPlayerKills(player);
+    const score = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
+    const kills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
     const lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
     mod.SetScoreboardPlayerValues(player, score, kills, lives);
 }
@@ -113,7 +126,8 @@ function handlePlayerJoinGame(player: mod.Player): void {
     updateScoreboard(player);
 }
 
-function handleManDown(player: mod.Player): void {
+function handlePlayerDied(player: mod.Player): void {
+    adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} died.`);
     let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
     if (lives >= 1) lives--;
     mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), lives);
