@@ -8,9 +8,11 @@ import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { UI } from 'bf6-portal-utils/ui/index.ts';
 import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
 import { getAllPlayers } from './helpers/index.ts';
+import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 
 const DEFAULT_PLAYER_LIVES = 1;
 const DEFAULT_REINFORCEMENTS_TIME = 60;
+const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
 let adminDebugTool: DebugTool | undefined;
 const LivesPlayerVar = 0;
@@ -66,6 +68,8 @@ Events.OnGameModeStarted.subscribe(startCountDownClock);
 Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
 
+mod.RuntimeSpawn_Abbasid
+
 function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
     if (player === victim) return;
     const playerScore = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
@@ -74,6 +78,11 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
     const gameModeScore = mod.GetGameModeScore(team);
     mod.SetGameModeScore(team, gameModeScore + 100);
     updateScoreboard(player);
+    // const stopSound = Sounds.play2D(SOUND_LOOP_2D, {
+    //     target: player,
+    //     amplitude: 1,
+    //     duration: 2000,
+    // });
 }
 
 function handleGameModeStarted(): void {
@@ -84,6 +93,8 @@ function handleGameModeStarted(): void {
 
     mod.SetGameModeTargetScore(1000);
     mod.SetGameModeTimeLimit(600);
+
+    Sounds.preload(SOUND_LOOP_2D);
 
     displayNextReinforcementsWidget();
 }
@@ -117,6 +128,10 @@ function handleReinforcementsArrived(): void {
         updateScoreboard(player);
     }
     mod.EnableAllPlayerDeploy(true);
+    const stopSound = Sounds.play2D(SOUND_LOOP_2D, {
+        amplitude: 1,
+        duration: 2000,
+    });
     nextReinforcementsClock.reset().start();
 }
 
