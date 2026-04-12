@@ -154,13 +154,11 @@ function handlePlayerDied(player: mod.Player): void {
 }
 
 function updateLivesText(newValue: number) {
-    if (!livesText) return;
-    mod.SetUITextLabel(livesText.uiWidget, mod.Message(mod.stringkeys.lifeCount, newValue));
+    livesText?.setMessage(mod.Message(mod.stringkeys.lifeCount, newValue));
 }
 
 function updateReinforcementsText(newValue: number) {
-    if (!reinforcementsText) return;
-    mod.SetUITextLabel(reinforcementsText.uiWidget, mod.Message(mod.stringkeys.nextReinforcementsTimer, newValue));
+    reinforcementsText?.setMessage(mod.Message(mod.stringkeys.nextReinforcementsTimer, newValue));
 }
 
 function displayLifeWidget(player: mod.Player): void {
