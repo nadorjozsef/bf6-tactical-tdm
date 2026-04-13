@@ -21,6 +21,7 @@ const KillsPlayerVar = 2;
 const LivesTextPlayerVar = 3;
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let reinforcementsText: UIText | undefined;
+let reinforcementsText2: UIText | undefined;
 
 function createAdminDebugTool(player: mod.Player): void {
     // The admin player is player id 0 for non-persistent test servers,
@@ -83,6 +84,7 @@ function handleGameModeStarted(): void {
     setupScoreboard();
     setupGameMode();
     displayNextReinforcementsWidget();
+    displayNextReinforcementsWidget2();
     Sounds.preload(SOUND_LOOP_2D);
 }
 
@@ -166,6 +168,7 @@ function updateLivesText(player: mod.Player, newValue: number) {
 
 function updateReinforcementsText(newValue: number) {
     reinforcementsText?.setMessage(mod.Message(mod.stringkeys.nextReinforcementsTimer, newValue));
+    reinforcementsText2?.setMessage(mod.Message(mod.stringkeys.reinforcementsTime, newValue));
 }
 
 function displayLifeWidget(player: mod.Player): void {
@@ -178,9 +181,9 @@ function displayLifeWidget(player: mod.Player): void {
         visible: true,
         depth: mod.UIDepth.BelowGameUI,
         position: { x: 0, y: 130 },
-        anchor: mod.UIAnchor.TopCenter,
+        anchor: mod.UIAnchor.TopRight,
         receiver: player,
-    }) ;
+    });
     const lifeCount = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
     const livesText = new UIText({
         message: mod.Message(mod.stringkeys.lifeCount, lifeCount),
@@ -203,14 +206,113 @@ function displayNextReinforcementsWidget(): void {
         bgAlpha: 0.8,
         visible: true,
         position: { x: 0, y: 50 },
-        anchor: mod.UIAnchor.TopCenter,
+        anchor: mod.UIAnchor.TopRight
     });
     reinforcementsText = new UIText({
         message: mod.Message(mod.stringkeys.nextReinforcementsTimer, nextReinforcementsTime),
         textSize: 20,
         width: 280,
         textColor: UI.COLORS.WHITE,
-        parent: container,
+        parent: container
     });
     container.show();
+}
+
+const team1ScoreContainer = new UIContainer({
+    position: { x: -120, y: 60 },
+    size: { width: 100, height: 50 },
+    anchor: mod.UIAnchor.TopCenter,
+    visible: true,
+    bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
+    bgAlpha: 0.75,
+    bgFill: mod.UIBgFill.Solid
+});
+
+team1ScoreContainer.show();
+
+const team1ScoreText = new UIText({
+    position: { x: 0, y: 0 },
+    size: { width: 100, height: 50 },
+    anchor: mod.UIAnchor.Center,
+    visible: true,
+    bgColor: mod.CreateVector(0.4392, 0.9216, 1),
+    bgAlpha: 0.75,
+    bgFill: mod.UIBgFill.None,
+    message: mod.Message(mod.stringkeys.team1Score, 42),
+    textColor: mod.CreateVector(0.4392, 0.9216, 1),
+    textSize: 28,
+    textAnchor: mod.UIAnchor.Center,
+    parent: team1ScoreContainer
+});
+
+const team2ScoreContainer = new UIContainer({
+    position: { x: 120, y: 60 },
+    size: { width: 100, height: 50 },
+    anchor: mod.UIAnchor.TopCenter,
+    visible: true,
+    bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
+    bgAlpha: 0.75,
+    bgFill: mod.UIBgFill.Solid
+});
+
+team2ScoreContainer.show();
+
+const team2ScoreText = new UIText({
+    position: { x: 0, y: 0 },
+    size: { width: 100, height: 50 },
+    anchor: mod.UIAnchor.Center,
+    visible: true,
+    padding: 0,
+    bgColor: mod.CreateVector(0.4392, 0.9216, 1),
+    bgAlpha: 0.75,
+    bgFill: mod.UIBgFill.None,
+    message: mod.Message(mod.stringkeys.team2Score, 60),
+    textColor: mod.CreateVector(1, 0.5137, 0.3804),
+    textSize: 28,
+    textAnchor: mod.UIAnchor.Center,
+    parent: team2ScoreContainer
+})
+
+function displayNextReinforcementsWidget2(): void {
+    const reinforcementsTimerContainer = new UIContainer({
+        position: { x: 0, y: 60 },
+        size: { width: 100, height: 50 },
+        anchor: mod.UIAnchor.TopCenter,
+        visible: true,
+        bgColor: mod.CreateVector(0.3294, 0.3686, 0.3882),
+        bgAlpha: 0.75,
+        bgFill: mod.UIBgFill.Solid
+    });
+
+    reinforcementsText2 = new UIText({
+        position: { x: 0, y: 0 },
+        size: { width: 100, height: 34.79 },
+        anchor: mod.UIAnchor.BottomCenter,
+        visible: true,
+        bgColor: mod.CreateVector(0.4392, 0.9216, 1),
+        bgAlpha: 0.75,
+        bgFill: mod.UIBgFill.None,
+        message: mod.Message(mod.stringkeys.reinforcementsTime, nextReinforcementsTime),
+        textColor: mod.CreateVector(1, 1, 1),
+        textSize: 28,
+        textAnchor: mod.UIAnchor.Center,
+        parent: reinforcementsTimerContainer
+    })
+
+    new UIText({
+        position: { x: 0, y: 0 },
+        size: { width: 100, height: 20.24 },
+        anchor: mod.UIAnchor.TopCenter,
+        visible: true,
+        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+        bgAlpha: 1,
+        bgFill: mod.UIBgFill.None,
+        message: mod.Message(mod.stringkeys.reinforcementsLabel),
+        textColor: mod.CreateVector(1, 1, 1),
+        textSize: 11,
+        textAnchor: mod.UIAnchor.Center,
+        parent: reinforcementsTimerContainer
+    })
+
+    reinforcementsTimerContainer.show();
 }

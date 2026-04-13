@@ -39,5 +39,9 @@
             "team2": "Team 2"
         },
     "lifeCount": "Life: {}",
-    "nextReinforcementsTimer": "Next reinforcements in {} seconds" 
+    "nextReinforcementsTimer": "Next reinforcements in {} seconds",
+    "team1Score": "{}",
+    "team2Score": "{}",
+    "reinforcementsLabel": "Reinforcements",
+    "reinforcementsTime": "{}"
 }
