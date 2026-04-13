@@ -62,8 +62,7 @@ function destroyAdminDebugTool(playerId: number): void {
 Events.OnPlayerJoinGame.subscribe(createAdminDebugTool);
 Events.OnPlayerLeaveGame.subscribe(destroyAdminDebugTool);
 Events.OnPlayerJoinGame.subscribe(handlePlayerJoinGame);
-Events.OnPlayerUndeploy.subscribe(handlePlayerDied);
-
+Events.OnPlayerUndeploy.subscribe(handlePlayerUndeploy);
 Events.OnGameModeStarted.subscribe(startCountDownClock);
 Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
@@ -81,17 +80,28 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
 }
 
 function handleGameModeStarted(): void {
+    setupScoreboard();
+    setupGameMode();
+    displayNextReinforcementsWidget();
+    Sounds.preload(SOUND_LOOP_2D);
+}
+
+function setupGameMode() {
+    mod.SetGameModeTargetScore(2000);
+    mod.SetGameModeTimeLimit(600);
+}
+
+function handlePlayerJoinGame(player: mod.Player): void {
+    mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), DEFAULT_PLAYER_LIVES);
+    displayLifeWidget(player);
+    scheduleScoreboardUpdates(player);
+}
+
+function setupScoreboard() {
     mod.SetScoreboardType(mod.ScoreboardType.CustomTwoTeams);
     mod.SetScoreboardHeader(mod.Message(mod.stringkeys.scoreboard.team1), mod.Message(mod.stringkeys.scoreboard.team2));
     mod.SetScoreboardColumnNames(mod.Message(mod.stringkeys.scoreboard.score), mod.Message(mod.stringkeys.scoreboard.kills), mod.Message(mod.stringkeys.scoreboard.lives));
     mod.SetScoreboardColumnWidths(1, 1, 1);
-
-    mod.SetGameModeTargetScore(1000);
-    mod.SetGameModeTimeLimit(600);
-
-    Sounds.preload(SOUND_LOOP_2D);
-
-    // displayNextReinforcementsWidget();
 }
 
 function updateScoreboard(player: mod.Player): void {
@@ -123,23 +133,14 @@ function handleReinforcementsArrived(): void {
         updateScoreboard(player);
     }
     mod.EnableAllPlayerDeploy(true);
-    const stopSound = Sounds.play2D(SOUND_LOOP_2D, {
+    Sounds.play2D(SOUND_LOOP_2D, {
         amplitude: 1,
         duration: 2000,
     });
     nextReinforcementsClock.reset().start();
 }
 
-function handlePlayerJoinGame(player: mod.Player): void {
-    mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), DEFAULT_PLAYER_LIVES);
-    // if (!mod.GetSoldierState(player, mod.SoldierStateBool.IsAISoldier)) {
-    displayLifeWidget(player);
-    // }
-    displayNextReinforcementsWidget(player);
-    updateScoreboard(player);
-}
-
-function handlePlayerDied(player: mod.Player): void {
+function handlePlayerUndeploy(player: mod.Player): void {
     adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} died.`);
     let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
     if (lives >= 1) lives--;
@@ -149,6 +150,12 @@ function handlePlayerDied(player: mod.Player): void {
     }
     updateLivesText(player, lives);
     updateScoreboard(player);
+}
+
+function scheduleScoreboardUpdates(player: mod.Player): void {
+    for (let seconds = 0; seconds <= 5; seconds++) {
+        Timers.setTimeout(() => updateScoreboard(player), seconds * 1000);
+    }
 }
 
 function updateLivesText(player: mod.Player, newValue: number) {
@@ -169,7 +176,7 @@ function displayLifeWidget(player: mod.Player): void {
         bgFill: mod.UIBgFill.Solid,
         bgAlpha: 0.8,
         visible: true,
-        depth: mod.UIDepth.AboveGameUI,
+        depth: mod.UIDepth.BelowGameUI,
         position: { x: 0, y: 130 },
         anchor: mod.UIAnchor.TopCenter,
         receiver: player,
@@ -187,7 +194,7 @@ function displayLifeWidget(player: mod.Player): void {
     container.show();
 }
 
-function displayNextReinforcementsWidget(player: mod.Player): void {
+function displayNextReinforcementsWidget(): void {
     const container = new UIContainer({
         width: 300,
         height: 80,
@@ -195,10 +202,8 @@ function displayNextReinforcementsWidget(player: mod.Player): void {
         bgFill: mod.UIBgFill.Solid,
         bgAlpha: 0.8,
         visible: true,
-        depth: mod.UIDepth.AboveGameUI,
         position: { x: 0, y: 50 },
         anchor: mod.UIAnchor.TopCenter,
-        receiver: player,
     });
     reinforcementsText = new UIText({
         message: mod.Message(mod.stringkeys.nextReinforcementsTimer, nextReinforcementsTime),
@@ -206,8 +211,6 @@ function displayNextReinforcementsWidget(player: mod.Player): void {
         width: 280,
         textColor: UI.COLORS.WHITE,
         parent: container,
-        receiver: player
     });
     container.show();
-    // 9
 }
