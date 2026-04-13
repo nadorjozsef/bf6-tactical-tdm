@@ -91,7 +91,7 @@ function handleGameModeStarted(): void {
 
     Sounds.preload(SOUND_LOOP_2D);
 
-    displayNextReinforcementsWidget();
+    // displayNextReinforcementsWidget();
 }
 
 function updateScoreboard(player: mod.Player): void {
@@ -135,6 +135,7 @@ function handlePlayerJoinGame(player: mod.Player): void {
     // if (!mod.GetSoldierState(player, mod.SoldierStateBool.IsAISoldier)) {
     displayLifeWidget(player);
     // }
+    displayNextReinforcementsWidget(player);
     updateScoreboard(player);
 }
 
@@ -172,11 +173,8 @@ function displayLifeWidget(player: mod.Player): void {
         position: { x: 0, y: 130 },
         anchor: mod.UIAnchor.TopCenter,
         receiver: player,
-    });
-
-
+    }) ;
     const lifeCount = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
-
     const livesText = new UIText({
         message: mod.Message(mod.stringkeys.lifeCount, lifeCount),
         textSize: 20,
@@ -186,11 +184,10 @@ function displayLifeWidget(player: mod.Player): void {
         parent: container,
     });
     mod.SetVariable(mod.ObjectVariable(player, LivesTextPlayerVar), livesText.name);
-
     container.show();
 }
 
-function displayNextReinforcementsWidget(): void {
+function displayNextReinforcementsWidget(player: mod.Player): void {
     const container = new UIContainer({
         width: 300,
         height: 80,
@@ -201,15 +198,16 @@ function displayNextReinforcementsWidget(): void {
         depth: mod.UIDepth.AboveGameUI,
         position: { x: 0, y: 50 },
         anchor: mod.UIAnchor.TopCenter,
+        receiver: player,
     });
-
     reinforcementsText = new UIText({
         message: mod.Message(mod.stringkeys.nextReinforcementsTimer, nextReinforcementsTime),
         textSize: 20,
         width: 280,
         textColor: UI.COLORS.WHITE,
         parent: container,
+        receiver: player
     });
     container.show();
-    // 7
+    // 9
 }
