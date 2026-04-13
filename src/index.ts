@@ -18,8 +18,8 @@ let adminDebugTool: DebugTool | undefined;
 const LivesPlayerVar = 0;
 const ScorePlayerVar = 1;
 const KillsPlayerVar = 2;
+const LivesTextPlayerVar = 3;
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
-let livesText: UIText | undefined;
 let reinforcementsText: UIText | undefined;
 
 function createAdminDebugTool(player: mod.Player): void {
@@ -78,11 +78,6 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
     const gameModeScore = mod.GetGameModeScore(team);
     mod.SetGameModeScore(team, gameModeScore + 100);
     updateScoreboard(player);
-    // const stopSound = Sounds.play2D(SOUND_LOOP_2D, {
-    //     target: player,
-    //     amplitude: 1,
-    //     duration: 2000,
-    // });
 }
 
 function handleGameModeStarted(): void {
@@ -124,7 +119,7 @@ function handleReinforcementsArrived(): void {
         let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
         lives += DEFAULT_PLAYER_LIVES;
         mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), lives);
-        updateLivesText(lives);
+        updateLivesText(player, lives);
         updateScoreboard(player);
     }
     mod.EnableAllPlayerDeploy(true);
@@ -137,7 +132,9 @@ function handleReinforcementsArrived(): void {
 
 function handlePlayerJoinGame(player: mod.Player): void {
     mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), DEFAULT_PLAYER_LIVES);
+    // if (!mod.GetSoldierState(player, mod.SoldierStateBool.IsAISoldier)) {
     displayLifeWidget(player);
+    // }
     updateScoreboard(player);
 }
 
@@ -149,12 +146,14 @@ function handlePlayerDied(player: mod.Player): void {
     if (lives <= 0) {
         mod.EnablePlayerDeploy(player, false);
     }
-    updateLivesText(lives);
+    updateLivesText(player, lives);
     updateScoreboard(player);
 }
 
-function updateLivesText(newValue: number) {
-    livesText?.setMessage(mod.Message(mod.stringkeys.lifeCount, newValue));
+function updateLivesText(player: mod.Player, newValue: number) {
+    const widgetName = mod.GetVariable(mod.ObjectVariable(player, LivesTextPlayerVar)) as string;
+    const widget = mod.FindUIWidgetWithName(widgetName)
+    mod.SetUITextLabel(widget, mod.Message(mod.stringkeys.lifeCount, newValue));
 }
 
 function updateReinforcementsText(newValue: number) {
@@ -175,9 +174,10 @@ function displayLifeWidget(player: mod.Player): void {
         receiver: player,
     });
 
-    const lifeCount = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar));
 
-    livesText = new UIText({
+    const lifeCount = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
+
+    const livesText = new UIText({
         message: mod.Message(mod.stringkeys.lifeCount, lifeCount),
         textSize: 20,
         width: 80,
@@ -185,6 +185,8 @@ function displayLifeWidget(player: mod.Player): void {
         receiver: player,
         parent: container,
     });
+    mod.SetVariable(mod.ObjectVariable(player, LivesTextPlayerVar), livesText.name);
+
     container.show();
 }
 
@@ -209,4 +211,5 @@ function displayNextReinforcementsWidget(): void {
         parent: container,
     });
     container.show();
+    // 7
 }
