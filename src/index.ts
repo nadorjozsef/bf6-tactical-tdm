@@ -12,6 +12,8 @@ import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 
 const DEFAULT_PLAYER_LIVES = 1;
 const DEFAULT_REINFORCEMENTS_TIME = 60;
+const GAME_MODE_TARGET_SCORE = 15
+const GAME_MODE_TIMELIMIT = 600;
 const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
 let adminDebugTool: DebugTool | undefined;
@@ -19,6 +21,8 @@ const LivesPlayerVar = 0;
 const ScorePlayerVar = 1;
 const KillsPlayerVar = 2;
 const LivesWidgetNamePlayerVar = 3;
+
+const ScoreTeamVar = 4;
 
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let reinforcementsText: UIText | undefined;
@@ -79,15 +83,12 @@ function handleGameModeStarted(): void {
     displayTeam2ScoreWidget();
     displayNextReinforcementsWidget();
     Sounds.preload(SOUND_LOOP_2D);
-    const team1 = mod.GetTeam(1)
-    const gameModeScore = mod.GetGameModeScore(team1);
-    adminDebugTool?.dynamicLog(`default game mode score: ${gameModeScore}`);
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar), 0);
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar), 0);
 }
 
 function setupGameMode() {
-    mod.SetGameModeTargetScore(20);
-    mod.SetGameModeTimeLimit(600);
-    mod.EndGameMode
+    mod.SetGameModeTimeLimit(GAME_MODE_TIMELIMIT);
 }
 
 function handlePlayerJoinGame(player: mod.Player): void {
@@ -127,18 +128,13 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
     if (player === victim) return;
     const playerKills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
     mod.SetVariable(mod.ObjectVariable(player, KillsPlayerVar), playerKills + 1);
-
     const playerScore = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
     mod.SetVariable(mod.ObjectVariable(player, ScorePlayerVar), playerScore + 100);
-    const team = mod.GetTeam(player);
-    const gameModeScore = mod.GetGameModeScore(team);
-    adminDebugTool?.dynamicLog(`game mode score before kill: ${gameModeScore}`);
-    mod.SetGameModeScore(team, gameModeScore + 1);
-    adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} kills.`);
-
-    updateTeam1ScoreText();
-    updateTeam2ScoreText();
-
+    if (equals(mod.GetTeam(player), mod.GetTeam(1))) {
+        updateTeam1Score(1);
+    } else if (equals(mod.GetTeam(player), mod.GetTeam(2))) {
+        updateTeam2Score(1);
+    }
     updateScoreboard(player);
 }
 
@@ -182,20 +178,26 @@ function updateLivesText(player: mod.Player, newValue: number) {
 }
 
 function updateReinforcementsText(newValue: number) {
-    reinforcementsText?.setMessage(mod.Message(mod.stringkeys.nextReinforcementsTimer, newValue));
     reinforcementsText?.setMessage(mod.Message(mod.stringkeys.reinforcementsTime, newValue));
 }
-
-function updateTeam1ScoreText() {
-    const score = mod.GetGameModeScore(mod.GetTeam(1));
-    adminDebugTool?.dynamicLog(`Update ${mod.GetTeam(1)} to ${score}`);
-    team1ScoreText?.setMessage(mod.Message(mod.stringkeys.team1Score, score));
+function updateTeam1Score(increment: number) {
+    let teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
+    teamScore += increment;
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar), teamScore);
+    if (teamScore >= GAME_MODE_TARGET_SCORE) {
+        mod.EndGameMode(mod.GetTeam(1));
+    }
+    team1ScoreText?.setMessage(mod.Message(mod.stringkeys.team1Score, teamScore));
 }
 
-function updateTeam2ScoreText() {
-    const score = mod.GetGameModeScore(mod.GetTeam(2));
-    adminDebugTool?.dynamicLog(`Update ${mod.GetTeam(2)} to ${score}`);
-    team2ScoreText?.setMessage(mod.Message(mod.stringkeys.team2Score, score));
+function updateTeam2Score(increment: number) {
+    let teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar)) as number;
+    teamScore += increment;
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar), teamScore);
+    if (teamScore >= GAME_MODE_TARGET_SCORE) {
+        mod.EndGameMode(mod.GetTeam(2));
+    }
+    team2ScoreText?.setMessage(mod.Message(mod.stringkeys.team2Score, teamScore));
 }
 
 function displayLifeWidget(player: mod.Player): void {
@@ -234,7 +236,7 @@ function displayTeam1ScoreWidget(): void {
         bgAlpha: 0.75,
         bgFill: mod.UIBgFill.Solid
     });
-    const team1Score = mod.GetGameModeScore(mod.GetTeam(1));
+    const teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
     team1ScoreText = new UIText({
         position: { x: 0, y: 0 },
         size: { width: 100, height: 50 },
@@ -243,7 +245,7 @@ function displayTeam1ScoreWidget(): void {
         bgColor: mod.CreateVector(0.4392, 0.9216, 1),
         bgAlpha: 0.75,
         bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.team1Score, team1Score),
+        message: mod.Message(mod.stringkeys.team1Score, teamScore),
         textColor: mod.CreateVector(0.4392, 0.9216, 1),
         textSize: 28,
         textAnchor: mod.UIAnchor.Center,
@@ -262,7 +264,7 @@ function displayTeam2ScoreWidget(): void {
         bgAlpha: 0.75,
         bgFill: mod.UIBgFill.Solid
     });
-    const team2Score = mod.GetGameModeScore(mod.GetTeam(2));
+    const teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
     team2ScoreText = new UIText({
         position: { x: 0, y: 0 },
         size: { width: 100, height: 50 },
@@ -272,7 +274,7 @@ function displayTeam2ScoreWidget(): void {
         bgColor: mod.CreateVector(0.4392, 0.9216, 1),
         bgAlpha: 0.75,
         bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.team2Score, team2Score),
+        message: mod.Message(mod.stringkeys.team2Score, teamScore),
         textColor: mod.CreateVector(1, 0.5137, 0.3804),
         textSize: 28,
         textAnchor: mod.UIAnchor.Center,
