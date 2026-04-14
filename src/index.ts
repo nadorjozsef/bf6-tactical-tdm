@@ -7,7 +7,7 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { UI } from 'bf6-portal-utils/ui/index.ts';
 import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
-import { getAllPlayers } from './helpers/index.ts';
+import { equals, getAllPlayers } from './helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 
 const DEFAULT_PLAYER_LIVES = 1;
@@ -18,10 +18,12 @@ let adminDebugTool: DebugTool | undefined;
 const LivesPlayerVar = 0;
 const ScorePlayerVar = 1;
 const KillsPlayerVar = 2;
-const LivesTextPlayerVar = 3;
+const LivesWidgetNamePlayerVar = 3;
+
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let reinforcementsText: UIText | undefined;
-let reinforcementsText2: UIText | undefined;
+let team1ScoreText: UIText | undefined;
+let team2ScoreText: UIText | undefined;
 
 function createAdminDebugTool(player: mod.Player): void {
     // The admin player is player id 0 for non-persistent test servers,
@@ -70,27 +72,22 @@ Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
 
 mod.RuntimeSpawn_Abbasid
 
-function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
-    if (player === victim) return;
-    const playerScore = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
-    mod.SetVariable(mod.ObjectVariable(player, ScorePlayerVar), playerScore + 100);
-    const team = mod.GetTeam(player);
-    const gameModeScore = mod.GetGameModeScore(team);
-    mod.SetGameModeScore(team, gameModeScore + 100);
-    updateScoreboard(player);
-}
-
 function handleGameModeStarted(): void {
     setupScoreboard();
     setupGameMode();
+    displayTeam1ScoreWidget()
+    displayTeam2ScoreWidget();
     displayNextReinforcementsWidget();
-    displayNextReinforcementsWidget2();
     Sounds.preload(SOUND_LOOP_2D);
+    const team1 = mod.GetTeam(1)
+    const gameModeScore = mod.GetGameModeScore(team1);
+    adminDebugTool?.dynamicLog(`default game mode score: ${gameModeScore}`);
 }
 
 function setupGameMode() {
-    mod.SetGameModeTargetScore(2000);
+    mod.SetGameModeTargetScore(20);
     mod.SetGameModeTimeLimit(600);
+    mod.EndGameMode
 }
 
 function handlePlayerJoinGame(player: mod.Player): void {
@@ -126,6 +123,25 @@ function updateNextReinforcementDisplay(seconds: number): void {
     updateReinforcementsText(seconds);
 }
 
+function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
+    if (player === victim) return;
+    const playerKills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
+    mod.SetVariable(mod.ObjectVariable(player, KillsPlayerVar), playerKills + 1);
+
+    const playerScore = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
+    mod.SetVariable(mod.ObjectVariable(player, ScorePlayerVar), playerScore + 100);
+    const team = mod.GetTeam(player);
+    const gameModeScore = mod.GetGameModeScore(team);
+    adminDebugTool?.dynamicLog(`game mode score before kill: ${gameModeScore}`);
+    mod.SetGameModeScore(team, gameModeScore + 1);
+    adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} kills.`);
+
+    updateTeam1ScoreText();
+    updateTeam2ScoreText();
+
+    updateScoreboard(player);
+}
+
 function handleReinforcementsArrived(): void {
     for (const player of getAllPlayers()) {
         let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
@@ -143,7 +159,6 @@ function handleReinforcementsArrived(): void {
 }
 
 function handlePlayerUndeploy(player: mod.Player): void {
-    adminDebugTool?.dynamicLog(`Player ${mod.GetObjId(player)} died.`);
     let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
     if (lives >= 1) lives--;
     mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), lives);
@@ -161,14 +176,26 @@ function scheduleScoreboardUpdates(player: mod.Player): void {
 }
 
 function updateLivesText(player: mod.Player, newValue: number) {
-    const widgetName = mod.GetVariable(mod.ObjectVariable(player, LivesTextPlayerVar)) as string;
+    const widgetName = mod.GetVariable(mod.ObjectVariable(player, LivesWidgetNamePlayerVar)) as string;
     const widget = mod.FindUIWidgetWithName(widgetName)
     mod.SetUITextLabel(widget, mod.Message(mod.stringkeys.lifeCount, newValue));
 }
 
 function updateReinforcementsText(newValue: number) {
     reinforcementsText?.setMessage(mod.Message(mod.stringkeys.nextReinforcementsTimer, newValue));
-    reinforcementsText2?.setMessage(mod.Message(mod.stringkeys.reinforcementsTime, newValue));
+    reinforcementsText?.setMessage(mod.Message(mod.stringkeys.reinforcementsTime, newValue));
+}
+
+function updateTeam1ScoreText() {
+    const score = mod.GetGameModeScore(mod.GetTeam(1));
+    adminDebugTool?.dynamicLog(`Update ${mod.GetTeam(1)} to ${score}`);
+    team1ScoreText?.setMessage(mod.Message(mod.stringkeys.team1Score, score));
+}
+
+function updateTeam2ScoreText() {
+    const score = mod.GetGameModeScore(mod.GetTeam(2));
+    adminDebugTool?.dynamicLog(`Update ${mod.GetTeam(2)} to ${score}`);
+    team2ScoreText?.setMessage(mod.Message(mod.stringkeys.team2Score, score));
 }
 
 function displayLifeWidget(player: mod.Player): void {
@@ -193,87 +220,68 @@ function displayLifeWidget(player: mod.Player): void {
         receiver: player,
         parent: container,
     });
-    mod.SetVariable(mod.ObjectVariable(player, LivesTextPlayerVar), livesText.name);
+    mod.SetVariable(mod.ObjectVariable(player, LivesWidgetNamePlayerVar), livesText.name);
     container.show();
+}
+
+function displayTeam1ScoreWidget(): void {
+    const team1ScoreContainer = new UIContainer({
+        position: { x: -120, y: 60 },
+        size: { width: 100, height: 50 },
+        anchor: mod.UIAnchor.TopCenter,
+        visible: true,
+        bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
+        bgAlpha: 0.75,
+        bgFill: mod.UIBgFill.Solid
+    });
+    const team1Score = mod.GetGameModeScore(mod.GetTeam(1));
+    team1ScoreText = new UIText({
+        position: { x: 0, y: 0 },
+        size: { width: 100, height: 50 },
+        anchor: mod.UIAnchor.Center,
+        visible: true,
+        bgColor: mod.CreateVector(0.4392, 0.9216, 1),
+        bgAlpha: 0.75,
+        bgFill: mod.UIBgFill.None,
+        message: mod.Message(mod.stringkeys.team1Score, team1Score),
+        textColor: mod.CreateVector(0.4392, 0.9216, 1),
+        textSize: 28,
+        textAnchor: mod.UIAnchor.Center,
+        parent: team1ScoreContainer
+    });
+    team1ScoreContainer.show();
+}
+
+function displayTeam2ScoreWidget(): void {
+    const team2ScoreContainer = new UIContainer({
+        position: { x: 120, y: 60 },
+        size: { width: 100, height: 50 },
+        anchor: mod.UIAnchor.TopCenter,
+        visible: true,
+        bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
+        bgAlpha: 0.75,
+        bgFill: mod.UIBgFill.Solid
+    });
+    const team2Score = mod.GetGameModeScore(mod.GetTeam(2));
+    team2ScoreText = new UIText({
+        position: { x: 0, y: 0 },
+        size: { width: 100, height: 50 },
+        anchor: mod.UIAnchor.Center,
+        visible: true,
+        padding: 0,
+        bgColor: mod.CreateVector(0.4392, 0.9216, 1),
+        bgAlpha: 0.75,
+        bgFill: mod.UIBgFill.None,
+        message: mod.Message(mod.stringkeys.team2Score, team2Score),
+        textColor: mod.CreateVector(1, 0.5137, 0.3804),
+        textSize: 28,
+        textAnchor: mod.UIAnchor.Center,
+        parent: team2ScoreContainer
+    })
+    team2ScoreContainer.show();
 }
 
 function displayNextReinforcementsWidget(): void {
-    const container = new UIContainer({
-        width: 300,
-        height: 80,
-        bgColor: UI.COLORS.BLACK,
-        bgFill: mod.UIBgFill.Solid,
-        bgAlpha: 0.8,
-        visible: true,
-        position: { x: 0, y: 50 },
-        anchor: mod.UIAnchor.TopRight
-    });
-    reinforcementsText = new UIText({
-        message: mod.Message(mod.stringkeys.nextReinforcementsTimer, nextReinforcementsTime),
-        textSize: 20,
-        width: 280,
-        textColor: UI.COLORS.WHITE,
-        parent: container
-    });
-    container.show();
-}
-
-const team1ScoreContainer = new UIContainer({
-    position: { x: -120, y: 60 },
-    size: { width: 100, height: 50 },
-    anchor: mod.UIAnchor.TopCenter,
-    visible: true,
-    bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
-    bgAlpha: 0.75,
-    bgFill: mod.UIBgFill.Solid
-});
-
-team1ScoreContainer.show();
-
-const team1ScoreText = new UIText({
-    position: { x: 0, y: 0 },
-    size: { width: 100, height: 50 },
-    anchor: mod.UIAnchor.Center,
-    visible: true,
-    bgColor: mod.CreateVector(0.4392, 0.9216, 1),
-    bgAlpha: 0.75,
-    bgFill: mod.UIBgFill.None,
-    message: mod.Message(mod.stringkeys.team1Score, 42),
-    textColor: mod.CreateVector(0.4392, 0.9216, 1),
-    textSize: 28,
-    textAnchor: mod.UIAnchor.Center,
-    parent: team1ScoreContainer
-});
-
-const team2ScoreContainer = new UIContainer({
-    position: { x: 120, y: 60 },
-    size: { width: 100, height: 50 },
-    anchor: mod.UIAnchor.TopCenter,
-    visible: true,
-    bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
-    bgAlpha: 0.75,
-    bgFill: mod.UIBgFill.Solid
-});
-
-team2ScoreContainer.show();
-
-const team2ScoreText = new UIText({
-    position: { x: 0, y: 0 },
-    size: { width: 100, height: 50 },
-    anchor: mod.UIAnchor.Center,
-    visible: true,
-    padding: 0,
-    bgColor: mod.CreateVector(0.4392, 0.9216, 1),
-    bgAlpha: 0.75,
-    bgFill: mod.UIBgFill.None,
-    message: mod.Message(mod.stringkeys.team2Score, 60),
-    textColor: mod.CreateVector(1, 0.5137, 0.3804),
-    textSize: 28,
-    textAnchor: mod.UIAnchor.Center,
-    parent: team2ScoreContainer
-})
-
-function displayNextReinforcementsWidget2(): void {
     const reinforcementsTimerContainer = new UIContainer({
         position: { x: 0, y: 60 },
         size: { width: 100, height: 50 },
@@ -284,7 +292,7 @@ function displayNextReinforcementsWidget2(): void {
         bgFill: mod.UIBgFill.Solid
     });
 
-    reinforcementsText2 = new UIText({
+    reinforcementsText = new UIText({
         position: { x: 0, y: 0 },
         size: { width: 100, height: 34.79 },
         anchor: mod.UIAnchor.BottomCenter,
