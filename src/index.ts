@@ -78,8 +78,11 @@ Events.OnPlayerDeployed.subscribe(handlePlayerDeployed);
 Events.OnGameModeStarted.subscribe(startCountDownClock);
 Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
+Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured)
 
-mod.RuntimeSpawn_Abbasid
+function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
+    const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
+}
 
 function handleGameModeStarted(): void {
     setupScoreboard();
@@ -94,6 +97,10 @@ function handleGameModeStarted(): void {
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar), 0);
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ActivePlayersTeamVar), 0);
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ActivePlayersTeamVar), 0);
+    mod.EnableGameModeObjective(mod.GetCapturePoint(100), true);
+    mod.SetCapturePointCapturingTime(mod.GetCapturePoint(100), 10);
+    mod.SetCapturePointNeutralizationTime(mod.GetCapturePoint(100), 10)
+    mod.SetMaxCaptureMultiplier(mod.GetCapturePoint(100), 1)
 }
 
 function setupGameMode() {
