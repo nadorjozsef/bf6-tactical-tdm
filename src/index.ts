@@ -16,6 +16,7 @@ const GAME_MODE_TARGET_SCORE = 15
 const GAME_MODE_TIMELIMIT = 600;
 const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
+
 let adminDebugTool: DebugTool | undefined;
 const LivesPlayerVar = 0;
 const ScorePlayerVar = 1;
@@ -88,6 +89,7 @@ function handleGameModeStarted(): void {
     displayNextReinforcementsWidget();
     displayActivePlayersWidget();
     Sounds.preload(SOUND_LOOP_2D);
+    mod.LoadMusic(mod.MusicPackages.Core);
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar), 0);
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar), 0);
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ActivePlayersTeamVar), 0);
@@ -144,6 +146,13 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
         updateTeam2Score(1);
     }
     updateScoreboard(player);
+
+    //Todo: set winning, losing teams, run it once
+    const team1Score = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
+    const team2Score = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar)) as number;
+    if (team1Score === GAME_MODE_TARGET_SCORE - 3 || team2Score === GAME_MODE_TARGET_SCORE - 3) {
+        mod.PlayMusic(mod.MusicEvents.Core_LastPhaseBegin);
+    }
 }
 
 function handleReinforcementsArrived(): void {
