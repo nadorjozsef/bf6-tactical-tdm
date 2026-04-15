@@ -42,5 +42,8 @@
     "team1Score": "{}",
     "team2Score": "{}",
     "reinforcementsLabel": "Reinforcements",
-    "reinforcementsTime": "{}"
+    "reinforcementsTime": "{}",
+    "team1ActivePlayersText": "{}",
+    "activePlayersTextCenter": "vs",
+    "team2ActivePlayersText": "{}"
 }

@@ -23,11 +23,14 @@ const KillsPlayerVar = 2;
 const LivesWidgetNamePlayerVar = 3;
 
 const ScoreTeamVar = 4;
+const ActivePlayersTeamVar = 5;
 
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let reinforcementsText: UIText | undefined;
 let team1ScoreText: UIText | undefined;
 let team2ScoreText: UIText | undefined;
+let team1ActivePlayersText: UIText | undefined;
+let team2ActivePlayersText: UIText | undefined;
 
 function createAdminDebugTool(player: mod.Player): void {
     // The admin player is player id 0 for non-persistent test servers,
@@ -70,6 +73,7 @@ Events.OnPlayerJoinGame.subscribe(createAdminDebugTool);
 Events.OnPlayerLeaveGame.subscribe(destroyAdminDebugTool);
 Events.OnPlayerJoinGame.subscribe(handlePlayerJoinGame);
 Events.OnPlayerUndeploy.subscribe(handlePlayerUndeploy);
+Events.OnPlayerDeployed.subscribe(handlePlayerDeployed);
 Events.OnGameModeStarted.subscribe(startCountDownClock);
 Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
@@ -82,9 +86,12 @@ function handleGameModeStarted(): void {
     displayTeam1ScoreWidget()
     displayTeam2ScoreWidget();
     displayNextReinforcementsWidget();
+    displayActivePlayersWidget();
     Sounds.preload(SOUND_LOOP_2D);
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar), 0);
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar), 0);
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ActivePlayersTeamVar), 0);
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ActivePlayersTeamVar), 0);
 }
 
 function setupGameMode() {
@@ -125,6 +132,7 @@ function updateNextReinforcementDisplay(seconds: number): void {
 }
 
 function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
+    updateActivePlayers();
     if (player === victim) return;
     const playerKills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
     mod.SetVariable(mod.ObjectVariable(player, KillsPlayerVar), playerKills + 1);
@@ -154,6 +162,10 @@ function handleReinforcementsArrived(): void {
     nextReinforcementsClock.reset().start();
 }
 
+function handlePlayerDeployed(): void {
+    updateActivePlayers();
+}
+
 function handlePlayerUndeploy(player: mod.Player): void {
     let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
     if (lives >= 1) lives--;
@@ -161,6 +173,7 @@ function handlePlayerUndeploy(player: mod.Player): void {
     if (lives <= 0) {
         mod.EnablePlayerDeploy(player, false);
     }
+    updateActivePlayers();
     updateLivesText(player, lives);
     updateScoreboard(player);
 }
@@ -180,6 +193,7 @@ function updateLivesText(player: mod.Player, newValue: number) {
 function updateReinforcementsText(newValue: number) {
     reinforcementsText?.setMessage(mod.Message(mod.stringkeys.reinforcementsTime, newValue));
 }
+
 function updateTeam1Score(increment: number) {
     let teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
     teamScore += increment;
@@ -200,17 +214,34 @@ function updateTeam2Score(increment: number) {
     team2ScoreText?.setMessage(mod.Message(mod.stringkeys.team2Score, teamScore));
 }
 
+function updateActivePlayers() {
+    let team1ActivePlayers = 0;
+    let team2ActivePlayers = 0;
+    for (const player of getAllPlayers()) {
+        const team = mod.GetTeam(player);
+        const isAlive = mod.GetSoldierState(player, mod.SoldierStateBool.IsAlive);
+        if (equals(mod.GetTeam(1), team) && isAlive) {
+            team1ActivePlayers++
+        } else if (equals(mod.GetTeam(2), team) && isAlive) {
+            team2ActivePlayers++
+        }
+    }
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ActivePlayersTeamVar), team1ActivePlayers);
+    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ActivePlayersTeamVar), team2ActivePlayers);
+    team1ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team1ActivePlayersText, team1ActivePlayers));
+    team2ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team2ActivePlayersText, team2ActivePlayers));
+}
+
 function displayLifeWidget(player: mod.Player): void {
     const container = new UIContainer({
-        width: 100,
-        height: 80,
+        position: { x: 300, y: 60 },
+        size: { width: 100, height: 50 },
         bgColor: UI.COLORS.BLACK,
         bgFill: mod.UIBgFill.Solid,
-        bgAlpha: 0.8,
+        bgAlpha: 0.75,
         visible: true,
         depth: mod.UIDepth.BelowGameUI,
-        position: { x: 0, y: 130 },
-        anchor: mod.UIAnchor.TopRight,
+        anchor: mod.UIAnchor.TopCenter,
         receiver: player,
     });
     const lifeCount = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
@@ -319,10 +350,67 @@ function displayNextReinforcementsWidget(): void {
         bgFill: mod.UIBgFill.None,
         message: mod.Message(mod.stringkeys.reinforcementsLabel),
         textColor: mod.CreateVector(1, 1, 1),
-        textSize: 11,
+        textSize: 12,
         textAnchor: mod.UIAnchor.Center,
         parent: reinforcementsTimerContainer
     })
 
     reinforcementsTimerContainer.show();
+}
+
+function displayActivePlayersWidget(): void {
+    const playerCountContainer = new UIContainer({
+        position: { x: 0, y: 130 },
+        size: { width: 150, height: 50 },
+        anchor: mod.UIAnchor.TopCenter,
+        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+        bgAlpha: 0,
+        bgFill: mod.UIBgFill.None,
+    });
+
+    team1ActivePlayersText = new UIText({
+        position: { x: 0, y: 0 },
+        size: { width: 50, height: 50 },
+        anchor: mod.UIAnchor.CenterLeft,
+        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+        bgAlpha: 1,
+        bgFill: mod.UIBgFill.None,
+        message: mod.Message(mod.stringkeys.team1ActivePlayersText),
+        textColor: mod.CreateVector(0.4392, 0.9216, 1),
+        textSize: 24,
+        textAnchor: mod.UIAnchor.Center,
+        parent: playerCountContainer,
+    });
+
+    team2ActivePlayersText = new UIText({
+        position: { x: 0, y: 0 },
+        size: { width: 50, height: 50 },
+        anchor: mod.UIAnchor.CenterRight,
+        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+        bgAlpha: 1,
+        bgFill: mod.UIBgFill.None,
+        message: mod.Message(mod.stringkeys.team2ActivePlayersText),
+        textColor: mod.CreateVector(1, 0.5137, 0.3804),
+        textSize: 24,
+        textAnchor: mod.UIAnchor.Center,
+        parent: playerCountContainer,
+    });
+
+    new UIText({
+        position: { x: 0, y: 0 },
+        size: { width: 50, height: 50 },
+        anchor: mod.UIAnchor.Center,
+        visible: true,
+        padding: 0,
+        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+        bgAlpha: 1,
+        bgFill: mod.UIBgFill.None,
+        message: mod.Message(mod.stringkeys.activePlayersTextCenter),
+        textColor: mod.CreateVector(1, 1, 1),
+        textSize: 24,
+        textAnchor: mod.UIAnchor.Center,
+        parent: playerCountContainer,
+    });
+
+    playerCountContainer.show();
 }
