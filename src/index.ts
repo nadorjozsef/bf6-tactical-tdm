@@ -9,6 +9,7 @@ import { UI } from 'bf6-portal-utils/ui/index.ts';
 import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
 import { equals, getAllPlayers } from './helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
+import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
 const DEFAULT_PLAYER_LIVES = 1;
 const DEFAULT_REINFORCEMENTS_TIME = 60;
@@ -18,13 +19,11 @@ const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D
 
 
 let adminDebugTool: DebugTool | undefined;
-const LivesPlayerVar = 0;
-const ScorePlayerVar = 1;
-const KillsPlayerVar = 2;
-const LivesWidgetNamePlayerVar = 3;
+const ScorePlayerVar = 0;
+const KillsPlayerVar = 1;
 
-const ScoreTeamVar = 4;
-const ActivePlayersTeamVar = 5;
+const ScoreTeamVar = 2;
+const ActivePlayersTeamVar = 3;
 
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let reinforcementsText: UIText | undefined;
@@ -80,6 +79,40 @@ Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
 Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured)
 
+export class Soldier {
+    public playerId: number;
+    public lives: { get: () => number; set: (value: number) => void } = { get: () => -1, set: () => { } };
+
+    constructor(player: mod.Player) {
+        const [lives, setLives] = SolidUI.createSignal(1);
+        this.lives = { get: lives, set: setLives };
+
+        this.playerId = mod.GetObjId(player);
+
+        const playerLivesUI = SolidUI.h(UIContainer, {
+            position: { x: 300, y: 60 },
+            size: { width: 100, height: 50 },
+            bgColor: UI.COLORS.BLACK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 0.75,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter,
+            receiver: player
+        });
+
+        SolidUI.h(UIText, {
+            message: () => mod.Message(mod.stringkeys.lifeCount, lives()),
+            textSize: 20,
+            width: 80,
+            textColor: UI.COLORS.WHITE,
+            receiver: player,
+            parent:playerLivesUI
+        });
+        playerLivesUI.show();
+    }
+}
+
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
 }
@@ -107,9 +140,11 @@ function setupGameMode() {
     mod.SetGameModeTimeLimit(GAME_MODE_TIMELIMIT);
 }
 
+const soldiers: Soldier[] = []
+
 function handlePlayerJoinGame(player: mod.Player): void {
-    mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), DEFAULT_PLAYER_LIVES);
-    displayLifeWidget(player);
+    const soldier = new Soldier(player)
+    soldiers.push(soldier);
     scheduleScoreboardUpdates(player);
 }
 
@@ -123,7 +158,7 @@ function setupScoreboard() {
 function updateScoreboard(player: mod.Player): void {
     const score = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
     const kills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
-    const lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
+    const lives = soldiers.find(x => x.playerId === mod.GetObjId(player))!.lives.get();
     mod.SetScoreboardPlayerValues(player, score, kills, lives);
 }
 
@@ -164,10 +199,8 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
 
 function handleReinforcementsArrived(): void {
     for (const player of getAllPlayers()) {
-        let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
-        lives += DEFAULT_PLAYER_LIVES;
-        mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), lives);
-        updateLivesText(player, lives);
+        const soldier = soldiers.find(x => x.playerId === mod.GetObjId(player))!;
+        soldier.lives.set(soldier.lives.get() + 1);
         updateScoreboard(player);
     }
     mod.EnableAllPlayerDeploy(true);
@@ -183,14 +216,16 @@ function handlePlayerDeployed(): void {
 }
 
 function handlePlayerUndeploy(player: mod.Player): void {
-    let lives = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
-    if (lives >= 1) lives--;
-    mod.SetVariable(mod.ObjectVariable(player, LivesPlayerVar), lives);
+    const soldier = soldiers.find(x => x.playerId === mod.GetObjId(player))!;
+    let lives = soldier.lives.get()
+    if (lives >= 1) {
+        lives--;
+    }
     if (lives <= 0) {
         mod.EnablePlayerDeploy(player, false);
     }
+    soldier.lives.set(lives);
     updateActivePlayers();
-    updateLivesText(player, lives);
     updateScoreboard(player);
 }
 
@@ -198,12 +233,6 @@ function scheduleScoreboardUpdates(player: mod.Player): void {
     for (let seconds = 0; seconds <= 5; seconds++) {
         Timers.setTimeout(() => updateScoreboard(player), seconds * 1000);
     }
-}
-
-function updateLivesText(player: mod.Player, newValue: number) {
-    const widgetName = mod.GetVariable(mod.ObjectVariable(player, LivesWidgetNamePlayerVar)) as string;
-    const widget = mod.FindUIWidgetWithName(widgetName)
-    mod.SetUITextLabel(widget, mod.Message(mod.stringkeys.lifeCount, newValue));
 }
 
 function updateReinforcementsText(newValue: number) {
@@ -246,31 +275,6 @@ function updateActivePlayers() {
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ActivePlayersTeamVar), team2ActivePlayers);
     team1ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team1ActivePlayersText, team1ActivePlayers));
     team2ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team2ActivePlayersText, team2ActivePlayers));
-}
-
-function displayLifeWidget(player: mod.Player): void {
-    const container = new UIContainer({
-        position: { x: 300, y: 60 },
-        size: { width: 100, height: 50 },
-        bgColor: UI.COLORS.BLACK,
-        bgFill: mod.UIBgFill.Solid,
-        bgAlpha: 0.75,
-        visible: true,
-        depth: mod.UIDepth.BelowGameUI,
-        anchor: mod.UIAnchor.TopCenter,
-        receiver: player,
-    });
-    const lifeCount = mod.GetVariable(mod.ObjectVariable(player, LivesPlayerVar)) as number;
-    const livesText = new UIText({
-        message: mod.Message(mod.stringkeys.lifeCount, lifeCount),
-        textSize: 20,
-        width: 80,
-        textColor: UI.COLORS.WHITE,
-        receiver: player,
-        parent: container,
-    });
-    mod.SetVariable(mod.ObjectVariable(player, LivesWidgetNamePlayerVar), livesText.name);
-    container.show();
 }
 
 function displayTeam1ScoreWidget(): void {
