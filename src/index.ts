@@ -81,13 +81,13 @@ Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured)
 export class SoldierManager {
     private _soldiers: Soldier[] = [];
 
-    constructor() {
+    constructor(private _gameUI: GameUI) {
         Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
         Events.OnPlayerLeaveGame.subscribe(this.handlePlayerLeaveGame.bind(this));
     }
 
     private handlePlayerJoinGame(player: mod.Player): void {
-        const soldier = new Soldier(player);
+        const soldier = new Soldier(player, this._gameUI);
         this._soldiers.push(soldier);
     }
 
@@ -99,7 +99,7 @@ export class SoldierManager {
     }
 
     public getSoldierById(playerId: number): Soldier {
-         const soldier = this._soldiers.find(soldiers => soldiers.Id === playerId);
+        const soldier = this._soldiers.find(soldiers => soldiers.Id === playerId);
         if (!soldier) {
             throw "Soldier has not found!"
         }
@@ -113,20 +113,29 @@ export class SoldierManager {
 }
 
 export class Soldier {
-    private _playerId: number;
-
-    public lives: { get: () => number; set: (value: number) => void } = { get: () => -1, set: () => { } };
+    private _id: number;
+    private _livesSignal = SolidUI.createSignal(1);
 
     get Id() {
-        return this._playerId;
+        return this._id;
     }
 
-    constructor(player: mod.Player) {
-        const [lives, setLives] = SolidUI.createSignal(1);
-        this.lives = { get: lives, set: setLives };
+    get lives(): number {
+        return this._livesSignal[0]();
+    }
 
-        this._playerId = mod.GetObjId(player);
+    set lives(value: number) {
+        this._livesSignal[1](value);
+    }
 
+    constructor(player: mod.Player, gameUI: GameUI) {
+        this._id = mod.GetObjId(player);
+        gameUI.showLivesUI(player, this._livesSignal[0])
+    }
+}
+
+export class GameUI {
+    public showLivesUI(player: mod.Player, signal: SolidUI.Accessor<number>) {
         const livesUI = SolidUI.h(UIContainer, {
             position: { x: 300, y: 60 },
             size: { width: 100, height: 50 },
@@ -138,9 +147,8 @@ export class Soldier {
             anchor: mod.UIAnchor.TopCenter,
             receiver: player
         });
-
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.lifeCount, lives()),
+            message: () => mod.Message(mod.stringkeys.lifeCount, signal()),
             textSize: 20,
             width: 80,
             textColor: UI.COLORS.WHITE,
@@ -151,7 +159,8 @@ export class Soldier {
     }
 }
 
-const soldierManager = new SoldierManager();
+const gameUI = new GameUI();
+const soldierManager = new SoldierManager(gameUI);
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
@@ -194,7 +203,7 @@ function setupScoreboard() {
 function updateScoreboard(player: mod.Player): void {
     const score = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
     const kills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
-    const lives = soldierManager.getSoldier(player)?.lives.get() ?? -1;
+    const lives = soldierManager.getSoldier(player)?.lives ?? -1;
     mod.SetScoreboardPlayerValues(player, score, kills, lives);
 }
 
@@ -236,7 +245,7 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
 function handleReinforcementsArrived(): void {
     for (const player of getAllPlayers()) {
         const soldier = soldierManager.getSoldier(player);
-        soldier.lives.set(soldier.lives.get() + 1);
+        soldier.lives = soldier.lives + 1;
         updateScoreboard(player);
     }
     mod.EnableAllPlayerDeploy(true);
@@ -253,14 +262,14 @@ function handlePlayerDeployed(): void {
 
 function handlePlayerUndeploy(player: mod.Player): void {
     const soldier = soldierManager.getSoldier(player);
-    let lives = soldier.lives.get()
+    let lives = soldier.lives
     if (lives >= 1) {
         lives--;
     }
     if (lives <= 0) {
         mod.EnablePlayerDeploy(player, false);
     }
-    soldier.lives.set(lives);
+    soldier.lives = lives;
     updateActivePlayers();
     updateScoreboard(player);
 }
