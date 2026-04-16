@@ -11,7 +11,6 @@ import { equals, getAllPlayers } from './helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
-const DEFAULT_PLAYER_LIVES = 1;
 const DEFAULT_REINFORCEMENTS_TIME = 60;
 const GAME_MODE_TARGET_SCORE = 15
 const GAME_MODE_TIMELIMIT = 600;
@@ -79,17 +78,56 @@ Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
 Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured)
 
+export class SoldierManager {
+    private _soldiers: Soldier[] = [];
+
+    constructor() {
+        Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
+        Events.OnPlayerLeaveGame.subscribe(this.handlePlayerLeaveGame.bind(this));
+    }
+
+    private handlePlayerJoinGame(player: mod.Player): void {
+        const soldier = new Soldier(player);
+        this._soldiers.push(soldier);
+    }
+
+    private handlePlayerLeaveGame(playerId: number): void {
+        const index = this._soldiers.findIndex(player => player.Id === playerId);
+        if (index !== -1) {
+            this._soldiers.splice(index, 1);
+        }
+    }
+
+    public getSoldierById(playerId: number): Soldier {
+         const soldier = this._soldiers.find(soldiers => soldiers.Id === playerId);
+        if (!soldier) {
+            throw "Soldier has not found!"
+        }
+        return soldier;
+    }
+
+    public getSoldier(player: mod.Player): Soldier {
+        const playerId = mod.GetObjId(player)
+        return this.getSoldierById(playerId)
+    }
+}
+
 export class Soldier {
-    public playerId: number;
+    private _playerId: number;
+
     public lives: { get: () => number; set: (value: number) => void } = { get: () => -1, set: () => { } };
+
+    get Id() {
+        return this._playerId;
+    }
 
     constructor(player: mod.Player) {
         const [lives, setLives] = SolidUI.createSignal(1);
         this.lives = { get: lives, set: setLives };
 
-        this.playerId = mod.GetObjId(player);
+        this._playerId = mod.GetObjId(player);
 
-        const playerLivesUI = SolidUI.h(UIContainer, {
+        const livesUI = SolidUI.h(UIContainer, {
             position: { x: 300, y: 60 },
             size: { width: 100, height: 50 },
             bgColor: UI.COLORS.BLACK,
@@ -107,11 +145,13 @@ export class Soldier {
             width: 80,
             textColor: UI.COLORS.WHITE,
             receiver: player,
-            parent:playerLivesUI
+            parent: livesUI
         });
-        playerLivesUI.show();
+        livesUI.show();
     }
 }
+
+const soldierManager = new SoldierManager();
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
@@ -140,11 +180,7 @@ function setupGameMode() {
     mod.SetGameModeTimeLimit(GAME_MODE_TIMELIMIT);
 }
 
-const soldiers: Soldier[] = []
-
 function handlePlayerJoinGame(player: mod.Player): void {
-    const soldier = new Soldier(player)
-    soldiers.push(soldier);
     scheduleScoreboardUpdates(player);
 }
 
@@ -158,7 +194,7 @@ function setupScoreboard() {
 function updateScoreboard(player: mod.Player): void {
     const score = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
     const kills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
-    const lives = soldiers.find(x => x.playerId === mod.GetObjId(player))!.lives.get();
+    const lives = soldierManager.getSoldier(player)?.lives.get() ?? -1;
     mod.SetScoreboardPlayerValues(player, score, kills, lives);
 }
 
@@ -199,7 +235,7 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
 
 function handleReinforcementsArrived(): void {
     for (const player of getAllPlayers()) {
-        const soldier = soldiers.find(x => x.playerId === mod.GetObjId(player))!;
+        const soldier = soldierManager.getSoldier(player);
         soldier.lives.set(soldier.lives.get() + 1);
         updateScoreboard(player);
     }
@@ -216,7 +252,7 @@ function handlePlayerDeployed(): void {
 }
 
 function handlePlayerUndeploy(player: mod.Player): void {
-    const soldier = soldiers.find(x => x.playerId === mod.GetObjId(player))!;
+    const soldier = soldierManager.getSoldier(player);
     let lives = soldier.lives.get()
     if (lives >= 1) {
         lives--;
