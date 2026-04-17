@@ -11,14 +11,7 @@ import { equals, getAllPlayers } from './helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
-const DEFAULT_REINFORCEMENTS_TIME = 60;
-const GAME_MODE_TARGET_SCORE = 15
-const GAME_MODE_TIMELIMIT = 600;
-const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
-
 let adminDebugTool: DebugTool | undefined;
-const ScorePlayerVar = 0;
-const KillsPlayerVar = 1;
 
 function createAdminDebugTool(player: mod.Player): void {
     // The admin player is player id 0 for non-persistent test servers,
@@ -57,6 +50,11 @@ function destroyAdminDebugTool(playerId: number): void {
     adminDebugTool = undefined;
 }
 
+const DEFAULT_REINFORCEMENTS_TIME = 60;
+const GAME_MODE_TARGET_SCORE = 15
+const GAME_MODE_TIMELIMIT = 600;
+const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
+
 Events.OnPlayerJoinGame.subscribe(createAdminDebugTool);
 Events.OnPlayerLeaveGame.subscribe(destroyAdminDebugTool);
 Events.OnPlayerJoinGame.subscribe(handlePlayerJoinGame);
@@ -81,14 +79,14 @@ export class PlayerManager {
     }
 
     private handlePlayerLeaveGame(playerId: number): void {
-        const index = this._players.findIndex(player => player.Id === playerId);
+        const index = this._players.findIndex(player => player.id === playerId);
         if (index !== -1) {
             this._players.splice(index, 1);
         }
     }
 
     public getPlayerById(playerId: number): Player {
-        const player = this._players.find(players => players.Id === playerId);
+        const player = this._players.find(players => players.id === playerId);
         if (!player) {
             throw "Soldier has not found!"
         }
@@ -99,20 +97,29 @@ export class PlayerManager {
         const playerId = mod.GetObjId(player)
         return this.getPlayerById(playerId)
     }
+
+    public getAllPlayers(): Player[] {
+        return this._players;
+    }
 }
 
 export class Player {
-    private _id: number;
     private _livesSignal = SolidUI.createSignal(1);
 
-    get Id() { return this._id; }
+    get id() { return mod.GetObjId(this._modPlayer) }
+
+    get teamId() { return mod.GetObjId(mod.GetTeam(this._modPlayer)) }
+
+    get isAlive() { return mod.GetSoldierState(this._modPlayer, mod.SoldierStateBool.IsAlive) }
 
     get lives(): number { return this._livesSignal[0](); }
-    set lives(value: number) { this._livesSignal[1](value); }
+    set lives(value: number) { this._livesSignal[1](value) }
 
-    constructor(modPlayer: mod.Player, gameUI: GameUI) {
-        this._id = mod.GetObjId(modPlayer);
-        gameUI.playerLivesUI(modPlayer, this._livesSignal[0]).show();
+    public score = 0;
+    public kills = 0;
+
+    constructor(private _modPlayer: mod.Player, gameUI: GameUI) {
+        gameUI.playerLivesUI(_modPlayer, this._livesSignal[0]).show();
     }
 }
 
@@ -367,11 +374,12 @@ function setupScoreboard() {
     mod.SetScoreboardColumnWidths(1, 1, 1);
 }
 
-function updateScoreboard(player: mod.Player): void {
-    const score = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
-    const kills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
-    const lives = playerManager.getPlayer(player)?.lives ?? -1;
-    mod.SetScoreboardPlayerValues(player, score, kills, lives);
+function updateScoreboard(modPlayer: mod.Player): void {
+    const player = playerManager.getPlayer(modPlayer);
+    const score = player.score
+    const kills = player.kills;
+    const lives = player.lives;
+    mod.SetScoreboardPlayerValues(modPlayer, score, kills, lives);
 }
 
 function startCountDownClock(): void {
@@ -387,16 +395,15 @@ function updateNextReinforcementDisplay(seconds: number): void {
     game.nextReinforcementsTime = seconds;
 }
 
-function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
+function handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void {
     updateActivePlayers();
-    if (player === victim) return;
-    const playerKills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
-    mod.SetVariable(mod.ObjectVariable(player, KillsPlayerVar), playerKills + 1);
-    const playerScore = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
-    mod.SetVariable(mod.ObjectVariable(player, ScorePlayerVar), playerScore + 100);
-    if (equals(mod.GetTeam(player), mod.GetTeam(1))) {
+    if (modPlayer === victim) return;
+    const player = playerManager.getPlayer(modPlayer)
+    player.kills++;
+    player.score += 100;
+    if (player.teamId === 1) {
         team1.score++;
-    } else if (equals(mod.GetTeam(player), mod.GetTeam(2))) {
+    } else if (player.teamId === 2) {
         team2.score++;
     }
     if (team1.score >= GAME_MODE_TARGET_SCORE) {
@@ -404,7 +411,7 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
     } else if (team1.score >= GAME_MODE_TARGET_SCORE) {
         mod.EndGameMode(mod.GetTeam(2));
     }
-    updateScoreboard(player);
+    updateScoreboard(modPlayer);
 
     //Todo: set winning, losing teams, run it once
     if (team1.score === GAME_MODE_TARGET_SCORE - 3 || team2.score === GAME_MODE_TARGET_SCORE - 3) {
@@ -444,23 +451,26 @@ function handlePlayerUndeploy(modPlayer: mod.Player): void {
     updateScoreboard(modPlayer);
 }
 
-function scheduleScoreboardUpdates(player: mod.Player): void {
+function scheduleScoreboardUpdates(modPlayer: mod.Player): void {
     for (let seconds = 0; seconds <= 5; seconds++) {
-        Timers.setTimeout(() => updateScoreboard(player), seconds * 1000);
+        Timers.setTimeout(() => updateScoreboard(modPlayer), seconds * 1000);
     }
 }
 
 function updateActivePlayers() {
     let team1ActivePlayers = 0;
     let team2ActivePlayers = 0;
-    for (const player of getAllPlayers()) {
-        const team = mod.GetTeam(player);
-        const isAlive = mod.GetSoldierState(player, mod.SoldierStateBool.IsAlive);
-        if (equals(mod.GetTeam(1), team) && isAlive) {
-            team1ActivePlayers++
-        } else if (equals(mod.GetTeam(2), team) && isAlive) {
-            team2ActivePlayers++
+    for (const player of playerManager.getAllPlayers()) {
+        const teamId = player.teamId;
+        const isAlive = player.isAlive;
+        if (isAlive) {
+            if (teamId === 1) {
+                team1ActivePlayers++
+            } else if (teamId === 2) {
+                team2ActivePlayers++
+            }
         }
+
     }
     game.team1ActivePlayers = team1ActivePlayers
     game.team2ActivePlayers = team2ActivePlayers
