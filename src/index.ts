@@ -20,13 +20,8 @@ let adminDebugTool: DebugTool | undefined;
 const ScorePlayerVar = 0;
 const KillsPlayerVar = 1;
 
-const ScoreTeamVar = 2;
-const ActivePlayersTeamVar = 3;
-
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let reinforcementsText: UIText | undefined;
-let team1ActivePlayersText: UIText | undefined;
-let team2ActivePlayersText: UIText | undefined;
 
 function createAdminDebugTool(player: mod.Player): void {
     // The admin player is player id 0 for non-persistent test servers,
@@ -113,18 +108,10 @@ export class Player {
     private _id: number;
     private _livesSignal = SolidUI.createSignal(1);
 
+    get Id() { return this._id; }
 
-    get Id() {
-        return this._id;
-    }
-
-    get lives(): number {
-        return this._livesSignal[0]();
-    }
-
-    set lives(value: number) {
-        this._livesSignal[1](value);
-    }
+    get lives(): number { return this._livesSignal[0](); }
+    set lives(value: number) { this._livesSignal[1](value); }
 
     constructor(modPlayer: mod.Player, gameUI: GameUI) {
         this._id = mod.GetObjId(modPlayer);
@@ -133,19 +120,12 @@ export class Player {
 }
 
 export class Team {
-    private _scoreSignal = SolidUI.createSignal(10);
+    private _scoreSignal = SolidUI.createSignal(0);
 
-    get Id(): number {
-        return this._id;
-    }
+    get Id(): number { return this._id; }
 
-    get score(): number {
-        return this._scoreSignal[0]();
-    }
-
-    set score(value: number) {
-        this._scoreSignal[1](value);
-    }
+    get score(): number { return this._scoreSignal[0](); }
+    set score(value: number) { this._scoreSignal[1](value); }
 
     constructor(private _id: number, gameUI: GameUI) {
         if (_id === 1) {
@@ -154,6 +134,22 @@ export class Team {
             gameUI.rightTeamScoreUI(this._scoreSignal[0]).show();
         }
     }
+}
+
+export class Game {
+    private _team1ActivePlayersSignal = SolidUI.createSignal(0);
+    private _team2ActivePlayersSignal = SolidUI.createSignal(0);
+
+    get team1ActivePlayers(): number { return this._team1ActivePlayersSignal[0](); }
+    set team1ActivePlayers(value: number) { this._team1ActivePlayersSignal[1](value); }
+
+    get team2ActivePlayers(): number { return this._team2ActivePlayersSignal[0](); }
+    set team2ActivePlayers(value: number) { this._team2ActivePlayersSignal[1](value); }
+
+    constructor(gameUI: GameUI) {
+        gameUI.activePlayersUI(this._team1ActivePlayersSignal[0], this._team2ActivePlayersSignal[0])
+    }
+
 }
 
 export class GameUI {
@@ -231,12 +227,70 @@ export class GameUI {
         });
         return scoreContainer;
     }
+
+    public activePlayersUI(team1ActivePlayerSignal: SolidUI.Accessor<number>, team2ActivePlayerSignal: SolidUI.Accessor<number>): UIContainer {
+        const playerCountContainer = SolidUI.h(UIContainer, {
+            position: { x: 0, y: 130 },
+            size: { width: 150, height: 50 },
+            anchor: mod.UIAnchor.TopCenter,
+            bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+            bgAlpha: 0,
+            bgFill: mod.UIBgFill.None,
+        });
+
+        SolidUI.h(UIText, {
+            position: { x: 0, y: 0 },
+            size: { width: 50, height: 50 },
+            anchor: mod.UIAnchor.CenterLeft,
+            bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+            bgAlpha: 1,
+            bgFill: mod.UIBgFill.None,
+            message: () => mod.Message(mod.stringkeys.team1ActivePlayersText, team1ActivePlayerSignal()),
+            textColor: mod.CreateVector(0.4392, 0.9216, 1),
+            textSize: 24,
+            textAnchor: mod.UIAnchor.Center,
+            parent: playerCountContainer,
+        });
+
+        SolidUI.h(UIText, {
+            position: { x: 0, y: 0 },
+            size: { width: 50, height: 50 },
+            anchor: mod.UIAnchor.CenterRight,
+            bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+            bgAlpha: 1,
+            bgFill: mod.UIBgFill.None,
+            message: () => mod.Message(mod.stringkeys.team2ActivePlayersText, team2ActivePlayerSignal()),
+            textColor: mod.CreateVector(1, 0.5137, 0.3804),
+            textSize: 24,
+            textAnchor: mod.UIAnchor.Center,
+            parent: playerCountContainer,
+        });
+
+        SolidUI.h(UIText, {
+            position: { x: 0, y: 0 },
+            size: { width: 50, height: 50 },
+            anchor: mod.UIAnchor.Center,
+            visible: true,
+            padding: 0,
+            bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+            bgAlpha: 1,
+            bgFill: mod.UIBgFill.None,
+            message: mod.Message(mod.stringkeys.activePlayersTextCenter),
+            textColor: mod.CreateVector(1, 1, 1),
+            textSize: 24,
+            textAnchor: mod.UIAnchor.Center,
+            parent: playerCountContainer,
+        });
+
+        return playerCountContainer;
+    }
 }
 
 const gameUI = new GameUI();
 const playerManager = new PlayerManager(gameUI);
 const team1 = new Team(1, gameUI);
 const team2 = new Team(2, gameUI);
+const game = new Game(gameUI)
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
@@ -246,13 +300,8 @@ function handleGameModeStarted(): void {
     setupScoreboard();
     setupGameMode();
     displayNextReinforcementsWidget();
-    displayActivePlayersWidget();
     Sounds.preload(SOUND_LOOP_2D);
     mod.LoadMusic(mod.MusicPackages.Core);
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar), 0);
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar), 0);
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ActivePlayersTeamVar), 0);
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ActivePlayersTeamVar), 0);
     mod.EnableGameModeObjective(mod.GetCapturePoint(100), true);
     mod.SetCapturePointCapturingTime(mod.GetCapturePoint(100), 10);
     mod.SetCapturePointNeutralizationTime(mod.GetCapturePoint(100), 10)
@@ -373,10 +422,8 @@ function updateActivePlayers() {
             team2ActivePlayers++
         }
     }
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ActivePlayersTeamVar), team1ActivePlayers);
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ActivePlayersTeamVar), team2ActivePlayers);
-    team1ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team1ActivePlayersText, team1ActivePlayers));
-    team2ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team2ActivePlayersText, team2ActivePlayers));
+    game.team1ActivePlayers = team1ActivePlayers
+    game.team2ActivePlayers = team2ActivePlayers
 }
 
 function displayNextReinforcementsWidget(): void {
@@ -421,61 +468,4 @@ function displayNextReinforcementsWidget(): void {
     })
 
     reinforcementsTimerContainer.show();
-}
-
-function displayActivePlayersWidget(): void {
-    const playerCountContainer = new UIContainer({
-        position: { x: 0, y: 130 },
-        size: { width: 150, height: 50 },
-        anchor: mod.UIAnchor.TopCenter,
-        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
-        bgAlpha: 0,
-        bgFill: mod.UIBgFill.None,
-    });
-
-    team1ActivePlayersText = new UIText({
-        position: { x: 0, y: 0 },
-        size: { width: 50, height: 50 },
-        anchor: mod.UIAnchor.CenterLeft,
-        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
-        bgAlpha: 1,
-        bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.team1ActivePlayersText),
-        textColor: mod.CreateVector(0.4392, 0.9216, 1),
-        textSize: 24,
-        textAnchor: mod.UIAnchor.Center,
-        parent: playerCountContainer,
-    });
-
-    team2ActivePlayersText = new UIText({
-        position: { x: 0, y: 0 },
-        size: { width: 50, height: 50 },
-        anchor: mod.UIAnchor.CenterRight,
-        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
-        bgAlpha: 1,
-        bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.team2ActivePlayersText),
-        textColor: mod.CreateVector(1, 0.5137, 0.3804),
-        textSize: 24,
-        textAnchor: mod.UIAnchor.Center,
-        parent: playerCountContainer,
-    });
-
-    new UIText({
-        position: { x: 0, y: 0 },
-        size: { width: 50, height: 50 },
-        anchor: mod.UIAnchor.Center,
-        visible: true,
-        padding: 0,
-        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
-        bgAlpha: 1,
-        bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.activePlayersTextCenter),
-        textColor: mod.CreateVector(1, 1, 1),
-        textSize: 24,
-        textAnchor: mod.UIAnchor.Center,
-        parent: playerCountContainer,
-    });
-
-    playerCountContainer.show();
 }
