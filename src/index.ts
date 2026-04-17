@@ -7,7 +7,7 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { UI } from 'bf6-portal-utils/ui/index.ts';
 import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
-import { equals, getAllPlayers } from './helpers/index.ts';
+import { getAllPlayers } from './helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
@@ -51,7 +51,7 @@ function destroyAdminDebugTool(playerId: number): void {
 }
 
 const DEFAULT_REINFORCEMENTS_TIME = 60;
-const GAME_MODE_TARGET_SCORE = 15
+const GAME_MODE_TARGET_SCORE = 15;
 const GAME_MODE_TIMELIMIT = 600;
 const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
@@ -63,7 +63,7 @@ Events.OnPlayerDeployed.subscribe(handlePlayerDeployed);
 Events.OnGameModeStarted.subscribe(startCountDownClock);
 Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
-Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured)
+Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured);
 
 export class PlayerManager {
     private _players: Player[] = [];
@@ -79,23 +79,23 @@ export class PlayerManager {
     }
 
     private handlePlayerLeaveGame(playerId: number): void {
-        const index = this._players.findIndex(player => player.id === playerId);
+        const index = this._players.findIndex((player) => player.id === playerId);
         if (index !== -1) {
             this._players.splice(index, 1);
         }
     }
 
     public getPlayerById(playerId: number): Player {
-        const player = this._players.find(players => players.id === playerId);
+        const player = this._players.find((players) => players.id === playerId);
         if (!player) {
-            throw "Soldier has not found!"
+            throw 'Soldier has not found!';
         }
         return player;
     }
 
     public getPlayer(player: mod.Player): Player {
-        const playerId = mod.GetObjId(player)
-        return this.getPlayerById(playerId)
+        const playerId = mod.GetObjId(player);
+        return this.getPlayerById(playerId);
     }
 
     public getAllPlayers(): Player[] {
@@ -106,19 +106,32 @@ export class PlayerManager {
 export class Player {
     private _livesSignal = SolidUI.createSignal(1);
 
-    get id() { return mod.GetObjId(this._modPlayer) }
+    get id() {
+        return mod.GetObjId(this._modPlayer);
+    }
 
-    get teamId() { return mod.GetObjId(mod.GetTeam(this._modPlayer)) }
+    get teamId() {
+        return mod.GetObjId(mod.GetTeam(this._modPlayer));
+    }
 
-    get isAlive() { return mod.GetSoldierState(this._modPlayer, mod.SoldierStateBool.IsAlive) }
+    get isAlive() {
+        return mod.GetSoldierState(this._modPlayer, mod.SoldierStateBool.IsAlive);
+    }
 
-    get lives(): number { return this._livesSignal[0](); }
-    set lives(value: number) { this._livesSignal[1](value) }
+    get lives(): number {
+        return this._livesSignal[0]();
+    }
+    set lives(value: number) {
+        this._livesSignal[1](value);
+    }
 
     public score = 0;
     public kills = 0;
 
-    constructor(private _modPlayer: mod.Player, gameUI: GameUI) {
+    constructor(
+        private _modPlayer: mod.Player,
+        gameUI: GameUI
+    ) {
         gameUI.playerLivesUI(_modPlayer, this._livesSignal[0]).show();
     }
 }
@@ -126,12 +139,21 @@ export class Player {
 export class Team {
     private _scoreSignal = SolidUI.createSignal(0);
 
-    get Id(): number { return this._id; }
+    get Id(): number {
+        return this._id;
+    }
 
-    get score(): number { return this._scoreSignal[0](); }
-    set score(value: number) { this._scoreSignal[1](value); }
+    get score(): number {
+        return this._scoreSignal[0]();
+    }
+    set score(value: number) {
+        this._scoreSignal[1](value);
+    }
 
-    constructor(private _id: number, gameUI: GameUI) {
+    constructor(
+        private _id: number,
+        gameUI: GameUI
+    ) {
         if (_id === 1) {
             gameUI.leftTeamScoreUI(this._scoreSignal[0]).show();
         } else {
@@ -145,14 +167,26 @@ export class Game {
     private _team2ActivePlayersSignal = SolidUI.createSignal(0);
     private _nextReinforcementsTimeSignal = SolidUI.createSignal(0);
 
-    get team1ActivePlayers(): number { return this._team1ActivePlayersSignal[0](); }
-    set team1ActivePlayers(value: number) { this._team1ActivePlayersSignal[1](value); }
+    get team1ActivePlayers(): number {
+        return this._team1ActivePlayersSignal[0]();
+    }
+    set team1ActivePlayers(value: number) {
+        this._team1ActivePlayersSignal[1](value);
+    }
 
-    get team2ActivePlayers(): number { return this._team2ActivePlayersSignal[0](); }
-    set team2ActivePlayers(value: number) { this._team2ActivePlayersSignal[1](value); }
+    get team2ActivePlayers(): number {
+        return this._team2ActivePlayersSignal[0]();
+    }
+    set team2ActivePlayers(value: number) {
+        this._team2ActivePlayersSignal[1](value);
+    }
 
-    get nextReinforcementsTime(): number { return this._nextReinforcementsTimeSignal[0](); }
-    set nextReinforcementsTime(value: number) { this._nextReinforcementsTimeSignal[1](value); }
+    get nextReinforcementsTime(): number {
+        return this._nextReinforcementsTimeSignal[0]();
+    }
+    set nextReinforcementsTime(value: number) {
+        this._nextReinforcementsTimeSignal[1](value);
+    }
 
     constructor(gameUI: GameUI) {
         gameUI.activePlayersUI(this._team1ActivePlayersSignal[0], this._team2ActivePlayersSignal[0]).show();
@@ -171,7 +205,7 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.TopCenter,
-            receiver: player
+            receiver: player,
         });
         SolidUI.h(UIText, {
             message: () => mod.Message(mod.stringkeys.lifeCount, livesSignal()),
@@ -179,9 +213,9 @@ export class GameUI {
             width: 80,
             textColor: UI.COLORS.WHITE,
             receiver: player,
-            parent: livesUI
+            parent: livesUI,
         });
-        return livesUI
+        return livesUI;
     }
 
     public leftTeamScoreUI(scoreSignal: SolidUI.Accessor<number>): UIContainer {
@@ -192,7 +226,7 @@ export class GameUI {
             visible: true,
             bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
             bgAlpha: 0.75,
-            bgFill: mod.UIBgFill.Solid
+            bgFill: mod.UIBgFill.Solid,
         });
         SolidUI.h(UIText, {
             position: { x: 0, y: 0 },
@@ -205,7 +239,7 @@ export class GameUI {
             textColor: mod.CreateVector(0.4392, 0.9216, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
-            parent: scoreContainer
+            parent: scoreContainer,
         });
         return scoreContainer;
     }
@@ -218,7 +252,7 @@ export class GameUI {
             visible: true,
             bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
             bgAlpha: 0.75,
-            bgFill: mod.UIBgFill.Solid
+            bgFill: mod.UIBgFill.Solid,
         });
         SolidUI.h(UIText, {
             position: { x: 0, y: 0 },
@@ -231,7 +265,7 @@ export class GameUI {
             textColor: mod.CreateVector(1, 0.5137, 0.3804),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
-            parent: scoreContainer
+            parent: scoreContainer,
         });
         return scoreContainer;
     }
@@ -244,7 +278,7 @@ export class GameUI {
             visible: true,
             bgColor: mod.CreateVector(0.3294, 0.3686, 0.3882),
             bgAlpha: 0.75,
-            bgFill: mod.UIBgFill.Solid
+            bgFill: mod.UIBgFill.Solid,
         });
 
         SolidUI.h(UIText, {
@@ -259,8 +293,8 @@ export class GameUI {
             textColor: mod.CreateVector(1, 1, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
-            parent: reinforcementsTimerContainer
-        })
+            parent: reinforcementsTimerContainer,
+        });
 
         SolidUI.h(UIText, {
             position: { x: 0, y: 0 },
@@ -274,13 +308,16 @@ export class GameUI {
             textColor: mod.CreateVector(1, 1, 1),
             textSize: 12,
             textAnchor: mod.UIAnchor.Center,
-            parent: reinforcementsTimerContainer
-        })
+            parent: reinforcementsTimerContainer,
+        });
 
         return reinforcementsTimerContainer;
     }
 
-    public activePlayersUI(team1ActivePlayerSignal: SolidUI.Accessor<number>, team2ActivePlayerSignal: SolidUI.Accessor<number>): UIContainer {
+    public activePlayersUI(
+        team1ActivePlayerSignal: SolidUI.Accessor<number>,
+        team2ActivePlayerSignal: SolidUI.Accessor<number>
+    ): UIContainer {
         const playerCountContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 130 },
             size: { width: 150, height: 50 },
@@ -342,10 +379,10 @@ const gameUI = new GameUI();
 const playerManager = new PlayerManager(gameUI);
 const team1 = new Team(1, gameUI);
 const team2 = new Team(2, gameUI);
-const game = new Game(gameUI)
+const game = new Game(gameUI);
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
-    const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
+    // const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
 }
 
 function handleGameModeStarted(): void {
@@ -355,8 +392,8 @@ function handleGameModeStarted(): void {
     mod.LoadMusic(mod.MusicPackages.Core);
     mod.EnableGameModeObjective(mod.GetCapturePoint(100), true);
     mod.SetCapturePointCapturingTime(mod.GetCapturePoint(100), 10);
-    mod.SetCapturePointNeutralizationTime(mod.GetCapturePoint(100), 10)
-    mod.SetMaxCaptureMultiplier(mod.GetCapturePoint(100), 1)
+    mod.SetCapturePointNeutralizationTime(mod.GetCapturePoint(100), 10);
+    mod.SetMaxCaptureMultiplier(mod.GetCapturePoint(100), 1);
 }
 
 function setupGameMode() {
@@ -370,13 +407,17 @@ function handlePlayerJoinGame(player: mod.Player): void {
 function setupScoreboard() {
     mod.SetScoreboardType(mod.ScoreboardType.CustomTwoTeams);
     mod.SetScoreboardHeader(mod.Message(mod.stringkeys.scoreboard.team1), mod.Message(mod.stringkeys.scoreboard.team2));
-    mod.SetScoreboardColumnNames(mod.Message(mod.stringkeys.scoreboard.score), mod.Message(mod.stringkeys.scoreboard.kills), mod.Message(mod.stringkeys.scoreboard.lives));
+    mod.SetScoreboardColumnNames(
+        mod.Message(mod.stringkeys.scoreboard.score),
+        mod.Message(mod.stringkeys.scoreboard.kills),
+        mod.Message(mod.stringkeys.scoreboard.lives)
+    );
     mod.SetScoreboardColumnWidths(1, 1, 1);
 }
 
 function updateScoreboard(modPlayer: mod.Player): void {
     const player = playerManager.getPlayer(modPlayer);
-    const score = player.score
+    const score = player.score;
     const kills = player.kills;
     const lives = player.lives;
     mod.SetScoreboardPlayerValues(modPlayer, score, kills, lives);
@@ -398,7 +439,7 @@ function updateNextReinforcementDisplay(seconds: number): void {
 function handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void {
     updateActivePlayers();
     if (modPlayer === victim) return;
-    const player = playerManager.getPlayer(modPlayer)
+    const player = playerManager.getPlayer(modPlayer);
     player.kills++;
     player.score += 100;
     if (player.teamId === 1) {
@@ -408,7 +449,7 @@ function handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void
     }
     if (team1.score >= GAME_MODE_TARGET_SCORE) {
         mod.EndGameMode(mod.GetTeam(1));
-    } else if (team1.score >= GAME_MODE_TARGET_SCORE) {
+    } else if (team2.score >= GAME_MODE_TARGET_SCORE) {
         mod.EndGameMode(mod.GetTeam(2));
     }
     updateScoreboard(modPlayer);
@@ -439,7 +480,7 @@ function handlePlayerDeployed(): void {
 
 function handlePlayerUndeploy(modPlayer: mod.Player): void {
     const player = playerManager.getPlayer(modPlayer);
-    let lives = player.lives
+    let lives = player.lives;
     if (lives >= 1) {
         lives--;
     }
@@ -465,13 +506,12 @@ function updateActivePlayers() {
         const isAlive = player.isAlive;
         if (isAlive) {
             if (teamId === 1) {
-                team1ActivePlayers++
+                team1ActivePlayers++;
             } else if (teamId === 2) {
-                team2ActivePlayers++
+                team2ActivePlayers++;
             }
         }
-
     }
-    game.team1ActivePlayers = team1ActivePlayers
-    game.team2ActivePlayers = team2ActivePlayers
+    game.team1ActivePlayers = team1ActivePlayers;
+    game.team2ActivePlayers = team2ActivePlayers;
 }
