@@ -20,9 +20,6 @@ let adminDebugTool: DebugTool | undefined;
 const ScorePlayerVar = 0;
 const KillsPlayerVar = 1;
 
-let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
-let reinforcementsText: UIText | undefined;
-
 function createAdminDebugTool(player: mod.Player): void {
     // The admin player is player id 0 for non-persistent test servers,
     // so don't do the rest of this unless it's the admin player.
@@ -139,6 +136,7 @@ export class Team {
 export class Game {
     private _team1ActivePlayersSignal = SolidUI.createSignal(0);
     private _team2ActivePlayersSignal = SolidUI.createSignal(0);
+    private _nextReinforcementsTimeSignal = SolidUI.createSignal(0);
 
     get team1ActivePlayers(): number { return this._team1ActivePlayersSignal[0](); }
     set team1ActivePlayers(value: number) { this._team1ActivePlayersSignal[1](value); }
@@ -146,10 +144,13 @@ export class Game {
     get team2ActivePlayers(): number { return this._team2ActivePlayersSignal[0](); }
     set team2ActivePlayers(value: number) { this._team2ActivePlayersSignal[1](value); }
 
-    constructor(gameUI: GameUI) {
-        gameUI.activePlayersUI(this._team1ActivePlayersSignal[0], this._team2ActivePlayersSignal[0])
-    }
+    get nextReinforcementsTime(): number { return this._nextReinforcementsTimeSignal[0](); }
+    set nextReinforcementsTime(value: number) { this._nextReinforcementsTimeSignal[1](value); }
 
+    constructor(gameUI: GameUI) {
+        gameUI.activePlayersUI(this._team1ActivePlayersSignal[0], this._team2ActivePlayersSignal[0]).show();
+        gameUI.displayNextReinforcements(this._nextReinforcementsTimeSignal[0]).show();
+    }
 }
 
 export class GameUI {
@@ -228,6 +229,50 @@ export class GameUI {
         return scoreContainer;
     }
 
+    public displayNextReinforcements(nextReinforcementsTimeSignal: SolidUI.Accessor<number>): UIContainer {
+        const reinforcementsTimerContainer = SolidUI.h(UIContainer, {
+            position: { x: 0, y: 60 },
+            size: { width: 100, height: 50 },
+            anchor: mod.UIAnchor.TopCenter,
+            visible: true,
+            bgColor: mod.CreateVector(0.3294, 0.3686, 0.3882),
+            bgAlpha: 0.75,
+            bgFill: mod.UIBgFill.Solid
+        });
+
+        SolidUI.h(UIText, {
+            position: { x: 0, y: 0 },
+            size: { width: 100, height: 34.79 },
+            anchor: mod.UIAnchor.BottomCenter,
+            visible: true,
+            bgColor: mod.CreateVector(0.4392, 0.9216, 1),
+            bgAlpha: 0.75,
+            bgFill: mod.UIBgFill.None,
+            message: () => mod.Message(mod.stringkeys.reinforcementsTime, nextReinforcementsTimeSignal()),
+            textColor: mod.CreateVector(1, 1, 1),
+            textSize: 28,
+            textAnchor: mod.UIAnchor.Center,
+            parent: reinforcementsTimerContainer
+        })
+
+        SolidUI.h(UIText, {
+            position: { x: 0, y: 0 },
+            size: { width: 100, height: 20.24 },
+            anchor: mod.UIAnchor.TopCenter,
+            visible: true,
+            bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+            bgAlpha: 1,
+            bgFill: mod.UIBgFill.None,
+            message: mod.Message(mod.stringkeys.reinforcementsLabel),
+            textColor: mod.CreateVector(1, 1, 1),
+            textSize: 12,
+            textAnchor: mod.UIAnchor.Center,
+            parent: reinforcementsTimerContainer
+        })
+
+        return reinforcementsTimerContainer;
+    }
+
     public activePlayersUI(team1ActivePlayerSignal: SolidUI.Accessor<number>, team2ActivePlayerSignal: SolidUI.Accessor<number>): UIContainer {
         const playerCountContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 130 },
@@ -299,7 +344,6 @@ function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
 function handleGameModeStarted(): void {
     setupScoreboard();
     setupGameMode();
-    displayNextReinforcementsWidget();
     Sounds.preload(SOUND_LOOP_2D);
     mod.LoadMusic(mod.MusicPackages.Core);
     mod.EnableGameModeObjective(mod.GetCapturePoint(100), true);
@@ -340,7 +384,7 @@ const nextReinforcementsClock = new Clocks.CountDownClock(DEFAULT_REINFORCEMENTS
 });
 
 function updateNextReinforcementDisplay(seconds: number): void {
-    updateReinforcementsText(seconds);
+    game.nextReinforcementsTime = seconds;
 }
 
 function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
@@ -406,10 +450,6 @@ function scheduleScoreboardUpdates(player: mod.Player): void {
     }
 }
 
-function updateReinforcementsText(newValue: number) {
-    reinforcementsText?.setMessage(mod.Message(mod.stringkeys.reinforcementsTime, newValue));
-}
-
 function updateActivePlayers() {
     let team1ActivePlayers = 0;
     let team2ActivePlayers = 0;
@@ -424,48 +464,4 @@ function updateActivePlayers() {
     }
     game.team1ActivePlayers = team1ActivePlayers
     game.team2ActivePlayers = team2ActivePlayers
-}
-
-function displayNextReinforcementsWidget(): void {
-    const reinforcementsTimerContainer = new UIContainer({
-        position: { x: 0, y: 60 },
-        size: { width: 100, height: 50 },
-        anchor: mod.UIAnchor.TopCenter,
-        visible: true,
-        bgColor: mod.CreateVector(0.3294, 0.3686, 0.3882),
-        bgAlpha: 0.75,
-        bgFill: mod.UIBgFill.Solid
-    });
-
-    reinforcementsText = new UIText({
-        position: { x: 0, y: 0 },
-        size: { width: 100, height: 34.79 },
-        anchor: mod.UIAnchor.BottomCenter,
-        visible: true,
-        bgColor: mod.CreateVector(0.4392, 0.9216, 1),
-        bgAlpha: 0.75,
-        bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.reinforcementsTime, nextReinforcementsTime),
-        textColor: mod.CreateVector(1, 1, 1),
-        textSize: 28,
-        textAnchor: mod.UIAnchor.Center,
-        parent: reinforcementsTimerContainer
-    })
-
-    new UIText({
-        position: { x: 0, y: 0 },
-        size: { width: 100, height: 20.24 },
-        anchor: mod.UIAnchor.TopCenter,
-        visible: true,
-        bgColor: mod.CreateVector(0.2, 0.2, 0.2),
-        bgAlpha: 1,
-        bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.reinforcementsLabel),
-        textColor: mod.CreateVector(1, 1, 1),
-        textSize: 12,
-        textAnchor: mod.UIAnchor.Center,
-        parent: reinforcementsTimerContainer
-    })
-
-    reinforcementsTimerContainer.show();
 }
