@@ -16,7 +16,6 @@ const GAME_MODE_TARGET_SCORE = 15
 const GAME_MODE_TIMELIMIT = 600;
 const SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
-
 let adminDebugTool: DebugTool | undefined;
 const ScorePlayerVar = 0;
 const KillsPlayerVar = 1;
@@ -26,8 +25,6 @@ const ActivePlayersTeamVar = 3;
 
 let nextReinforcementsTime = DEFAULT_REINFORCEMENTS_TIME;
 let reinforcementsText: UIText | undefined;
-let team1ScoreText: UIText | undefined;
-let team2ScoreText: UIText | undefined;
 let team1ActivePlayersText: UIText | undefined;
 let team2ActivePlayersText: UIText | undefined;
 
@@ -78,43 +75,44 @@ Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
 Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured)
 
-export class SoldierManager {
-    private _soldiers: Soldier[] = [];
+export class PlayerManager {
+    private _players: Player[] = [];
 
     constructor(private _gameUI: GameUI) {
         Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
         Events.OnPlayerLeaveGame.subscribe(this.handlePlayerLeaveGame.bind(this));
     }
 
-    private handlePlayerJoinGame(player: mod.Player): void {
-        const soldier = new Soldier(player, this._gameUI);
-        this._soldiers.push(soldier);
+    private handlePlayerJoinGame(modPlayer: mod.Player): void {
+        const player = new Player(modPlayer, this._gameUI);
+        this._players.push(player);
     }
 
     private handlePlayerLeaveGame(playerId: number): void {
-        const index = this._soldiers.findIndex(player => player.Id === playerId);
+        const index = this._players.findIndex(player => player.Id === playerId);
         if (index !== -1) {
-            this._soldiers.splice(index, 1);
+            this._players.splice(index, 1);
         }
     }
 
-    public getSoldierById(playerId: number): Soldier {
-        const soldier = this._soldiers.find(soldiers => soldiers.Id === playerId);
-        if (!soldier) {
+    public getPlayerById(playerId: number): Player {
+        const player = this._players.find(players => players.Id === playerId);
+        if (!player) {
             throw "Soldier has not found!"
         }
-        return soldier;
+        return player;
     }
 
-    public getSoldier(player: mod.Player): Soldier {
+    public getPlayer(player: mod.Player): Player {
         const playerId = mod.GetObjId(player)
-        return this.getSoldierById(playerId)
+        return this.getPlayerById(playerId)
     }
 }
 
-export class Soldier {
+export class Player {
     private _id: number;
     private _livesSignal = SolidUI.createSignal(1);
+
 
     get Id() {
         return this._id;
@@ -128,14 +126,38 @@ export class Soldier {
         this._livesSignal[1](value);
     }
 
-    constructor(player: mod.Player, gameUI: GameUI) {
-        this._id = mod.GetObjId(player);
-        gameUI.showLivesUI(player, this._livesSignal[0])
+    constructor(modPlayer: mod.Player, gameUI: GameUI) {
+        this._id = mod.GetObjId(modPlayer);
+        gameUI.playerLivesUI(modPlayer, this._livesSignal[0]).show();
+    }
+}
+
+export class Team {
+    private _scoreSignal = SolidUI.createSignal(10);
+
+    get Id(): number {
+        return this._id;
+    }
+
+    get score(): number {
+        return this._scoreSignal[0]();
+    }
+
+    set score(value: number) {
+        this._scoreSignal[1](value);
+    }
+
+    constructor(private _id: number, gameUI: GameUI) {
+        if (_id === 1) {
+            gameUI.leftTeamScoreUI(this._scoreSignal[0]).show();
+        } else {
+            gameUI.rightTeamScoreUI(this._scoreSignal[0]).show();
+        }
     }
 }
 
 export class GameUI {
-    public showLivesUI(player: mod.Player, signal: SolidUI.Accessor<number>) {
+    public playerLivesUI(player: mod.Player, livesSignal: SolidUI.Accessor<number>): UIContainer {
         const livesUI = SolidUI.h(UIContainer, {
             position: { x: 300, y: 60 },
             size: { width: 100, height: 50 },
@@ -148,19 +170,73 @@ export class GameUI {
             receiver: player
         });
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.lifeCount, signal()),
+            message: () => mod.Message(mod.stringkeys.lifeCount, livesSignal()),
             textSize: 20,
             width: 80,
             textColor: UI.COLORS.WHITE,
             receiver: player,
             parent: livesUI
         });
-        livesUI.show();
+        return livesUI
+    }
+
+    public leftTeamScoreUI(scoreSignal: SolidUI.Accessor<number>): UIContainer {
+        const scoreContainer = SolidUI.h(UIContainer, {
+            position: { x: -120, y: 60 },
+            size: { width: 100, height: 50 },
+            anchor: mod.UIAnchor.TopCenter,
+            visible: true,
+            bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
+            bgAlpha: 0.75,
+            bgFill: mod.UIBgFill.Solid
+        });
+        SolidUI.h(UIText, {
+            position: { x: 0, y: 0 },
+            size: { width: 100, height: 50 },
+            anchor: mod.UIAnchor.Center,
+            visible: true,
+            bgAlpha: 0.75,
+            bgFill: mod.UIBgFill.None,
+            message: () => mod.Message(mod.stringkeys.team1Score, scoreSignal()),
+            textColor: mod.CreateVector(0.4392, 0.9216, 1),
+            textSize: 28,
+            textAnchor: mod.UIAnchor.Center,
+            parent: scoreContainer
+        });
+        return scoreContainer;
+    }
+
+    public rightTeamScoreUI(scoreSignal: SolidUI.Accessor<number>): UIContainer {
+        const scoreContainer = SolidUI.h(UIContainer, {
+            position: { x: 120, y: 60 },
+            size: { width: 100, height: 50 },
+            anchor: mod.UIAnchor.TopCenter,
+            visible: true,
+            bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
+            bgAlpha: 0.75,
+            bgFill: mod.UIBgFill.Solid
+        });
+        SolidUI.h(UIText, {
+            position: { x: 0, y: 0 },
+            size: { width: 100, height: 50 },
+            anchor: mod.UIAnchor.Center,
+            visible: true,
+            bgAlpha: 0.75,
+            bgFill: mod.UIBgFill.None,
+            message: () => mod.Message(mod.stringkeys.team1Score, scoreSignal()),
+            textColor: mod.CreateVector(1, 0.5137, 0.3804),
+            textSize: 28,
+            textAnchor: mod.UIAnchor.Center,
+            parent: scoreContainer
+        });
+        return scoreContainer;
     }
 }
 
 const gameUI = new GameUI();
-const soldierManager = new SoldierManager(gameUI);
+const playerManager = new PlayerManager(gameUI);
+const team1 = new Team(1, gameUI);
+const team2 = new Team(2, gameUI);
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
@@ -169,8 +245,6 @@ function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
 function handleGameModeStarted(): void {
     setupScoreboard();
     setupGameMode();
-    displayTeam1ScoreWidget()
-    displayTeam2ScoreWidget();
     displayNextReinforcementsWidget();
     displayActivePlayersWidget();
     Sounds.preload(SOUND_LOOP_2D);
@@ -203,7 +277,7 @@ function setupScoreboard() {
 function updateScoreboard(player: mod.Player): void {
     const score = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
     const kills = mod.GetVariable(mod.ObjectVariable(player, KillsPlayerVar)) as number;
-    const lives = soldierManager.getSoldier(player)?.lives ?? -1;
+    const lives = playerManager.getPlayer(player)?.lives ?? -1;
     mod.SetScoreboardPlayerValues(player, score, kills, lives);
 }
 
@@ -228,25 +302,28 @@ function handlePlayerEarnedKill(player: mod.Player, victim: mod.Player): void {
     const playerScore = mod.GetVariable(mod.ObjectVariable(player, ScorePlayerVar)) as number;
     mod.SetVariable(mod.ObjectVariable(player, ScorePlayerVar), playerScore + 100);
     if (equals(mod.GetTeam(player), mod.GetTeam(1))) {
-        updateTeam1Score(1);
+        team1.score++;
     } else if (equals(mod.GetTeam(player), mod.GetTeam(2))) {
-        updateTeam2Score(1);
+        team2.score++;
+    }
+    if (team1.score >= GAME_MODE_TARGET_SCORE) {
+        mod.EndGameMode(mod.GetTeam(1));
+    } else if (team1.score >= GAME_MODE_TARGET_SCORE) {
+        mod.EndGameMode(mod.GetTeam(2));
     }
     updateScoreboard(player);
 
     //Todo: set winning, losing teams, run it once
-    const team1Score = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
-    const team2Score = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar)) as number;
-    if (team1Score === GAME_MODE_TARGET_SCORE - 3 || team2Score === GAME_MODE_TARGET_SCORE - 3) {
+    if (team1.score === GAME_MODE_TARGET_SCORE - 3 || team2.score === GAME_MODE_TARGET_SCORE - 3) {
         mod.PlayMusic(mod.MusicEvents.Core_LastPhaseBegin);
     }
 }
 
 function handleReinforcementsArrived(): void {
-    for (const player of getAllPlayers()) {
-        const soldier = soldierManager.getSoldier(player);
-        soldier.lives = soldier.lives + 1;
-        updateScoreboard(player);
+    for (const modPlayer of getAllPlayers()) {
+        const player = playerManager.getPlayer(modPlayer);
+        player.lives = player.lives + 1;
+        updateScoreboard(modPlayer);
     }
     mod.EnableAllPlayerDeploy(true);
     Sounds.play2D(SOUND_LOOP_2D, {
@@ -260,18 +337,18 @@ function handlePlayerDeployed(): void {
     updateActivePlayers();
 }
 
-function handlePlayerUndeploy(player: mod.Player): void {
-    const soldier = soldierManager.getSoldier(player);
-    let lives = soldier.lives
+function handlePlayerUndeploy(modPlayer: mod.Player): void {
+    const player = playerManager.getPlayer(modPlayer);
+    let lives = player.lives
     if (lives >= 1) {
         lives--;
     }
     if (lives <= 0) {
-        mod.EnablePlayerDeploy(player, false);
+        mod.EnablePlayerDeploy(modPlayer, false);
     }
-    soldier.lives = lives;
+    player.lives = lives;
     updateActivePlayers();
-    updateScoreboard(player);
+    updateScoreboard(modPlayer);
 }
 
 function scheduleScoreboardUpdates(player: mod.Player): void {
@@ -282,26 +359,6 @@ function scheduleScoreboardUpdates(player: mod.Player): void {
 
 function updateReinforcementsText(newValue: number) {
     reinforcementsText?.setMessage(mod.Message(mod.stringkeys.reinforcementsTime, newValue));
-}
-
-function updateTeam1Score(increment: number) {
-    let teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
-    teamScore += increment;
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar), teamScore);
-    if (teamScore >= GAME_MODE_TARGET_SCORE) {
-        mod.EndGameMode(mod.GetTeam(1));
-    }
-    team1ScoreText?.setMessage(mod.Message(mod.stringkeys.team1Score, teamScore));
-}
-
-function updateTeam2Score(increment: number) {
-    let teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar)) as number;
-    teamScore += increment;
-    mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ScoreTeamVar), teamScore);
-    if (teamScore >= GAME_MODE_TARGET_SCORE) {
-        mod.EndGameMode(mod.GetTeam(2));
-    }
-    team2ScoreText?.setMessage(mod.Message(mod.stringkeys.team2Score, teamScore));
 }
 
 function updateActivePlayers() {
@@ -320,63 +377,6 @@ function updateActivePlayers() {
     mod.SetVariable(mod.ObjectVariable(mod.GetTeam(2), ActivePlayersTeamVar), team2ActivePlayers);
     team1ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team1ActivePlayersText, team1ActivePlayers));
     team2ActivePlayersText?.setMessage(mod.Message(mod.stringkeys.team2ActivePlayersText, team2ActivePlayers));
-}
-
-function displayTeam1ScoreWidget(): void {
-    const team1ScoreContainer = new UIContainer({
-        position: { x: -120, y: 60 },
-        size: { width: 100, height: 50 },
-        anchor: mod.UIAnchor.TopCenter,
-        visible: true,
-        bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
-        bgAlpha: 0.75,
-        bgFill: mod.UIBgFill.Solid
-    });
-    const teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
-    team1ScoreText = new UIText({
-        position: { x: 0, y: 0 },
-        size: { width: 100, height: 50 },
-        anchor: mod.UIAnchor.Center,
-        visible: true,
-        bgColor: mod.CreateVector(0.4392, 0.9216, 1),
-        bgAlpha: 0.75,
-        bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.team1Score, teamScore),
-        textColor: mod.CreateVector(0.4392, 0.9216, 1),
-        textSize: 28,
-        textAnchor: mod.UIAnchor.Center,
-        parent: team1ScoreContainer
-    });
-    team1ScoreContainer.show();
-}
-
-function displayTeam2ScoreWidget(): void {
-    const team2ScoreContainer = new UIContainer({
-        position: { x: 120, y: 60 },
-        size: { width: 100, height: 50 },
-        anchor: mod.UIAnchor.TopCenter,
-        visible: true,
-        bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
-        bgAlpha: 0.75,
-        bgFill: mod.UIBgFill.Solid
-    });
-    const teamScore = mod.GetVariable(mod.ObjectVariable(mod.GetTeam(1), ScoreTeamVar)) as number;
-    team2ScoreText = new UIText({
-        position: { x: 0, y: 0 },
-        size: { width: 100, height: 50 },
-        anchor: mod.UIAnchor.Center,
-        visible: true,
-        padding: 0,
-        bgColor: mod.CreateVector(0.4392, 0.9216, 1),
-        bgAlpha: 0.75,
-        bgFill: mod.UIBgFill.None,
-        message: mod.Message(mod.stringkeys.team2Score, teamScore),
-        textColor: mod.CreateVector(1, 0.5137, 0.3804),
-        textSize: 28,
-        textAnchor: mod.UIAnchor.Center,
-        parent: team2ScoreContainer
-    })
-    team2ScoreContainer.show();
 }
 
 function displayNextReinforcementsWidget(): void {
