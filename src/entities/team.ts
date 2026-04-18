@@ -6,7 +6,7 @@ export class TeamManager {
     private _teams: Team[] = [];
 
     constructor(private _gameUI: GameUI) {
-        Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
+        Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
         this._teams.push(new Team(mod.GetTeam(1)));
         this._teams.push(new Team(mod.GetTeam(2)));
     }
@@ -19,30 +19,21 @@ export class TeamManager {
         return this._teams[1];
     }
 
-    private handlePlayerJoinGame(modPlayer: mod.Player): void {
-        const modTeam = mod.GetTeam(modPlayer);
-        this.showActivePlayers(modTeam);
-        this.showScores(modTeam);
+    private handleGameModeStarted(): void {
+        this.showActivePlayers();
+        this.showScores();
     }
 
-    private showActivePlayers(modTeam: mod.Team) {
-        const teamId = mod.GetObjId(modTeam);
-        if (teamId === 1) {
-            this._gameUI.activePlayersUI(modTeam, this._teams[0]._activePlayersSignal[0], this._teams[1]._activePlayersSignal[0]).show();
-        } else if (teamId === 2) {
-            this._gameUI.activePlayersUI(modTeam, this._teams[1]._activePlayersSignal[0], this._teams[0]._activePlayersSignal[0]).show();
-        }
+    private showActivePlayers() {
+        this._gameUI.activePlayersUI(mod.GetTeam(1), this._teams[0]._activePlayersSignal[0], this._teams[1]._activePlayersSignal[0]).show();
+        this._gameUI.activePlayersUI(mod.GetTeam(2), this._teams[1]._activePlayersSignal[0], this._teams[0]._activePlayersSignal[0]).show();
     }
 
-    private showScores(modTeam: mod.Team) {
-        const teamId = mod.GetObjId(modTeam);
-        if (teamId === 1) {
-            this._gameUI.leftTeamScoreUI(modTeam, this._teams[0]._scoreSignal[0]).show();
-            this._gameUI.rightTeamScoreUI(modTeam, this._teams[1]._scoreSignal[0]).show();
-        } else if (teamId === 2) {
-            this._gameUI.leftTeamScoreUI(modTeam, this._teams[1]._scoreSignal[0]).show();
-            this._gameUI.rightTeamScoreUI(modTeam, this._teams[0]._scoreSignal[0]).show();
-        }
+    private showScores() {
+        this._gameUI.leftTeamScoreUI(mod.GetTeam(1), this._teams[0]._scoreSignal[0]).show();
+        this._gameUI.rightTeamScoreUI(mod.GetTeam(1), this._teams[1]._scoreSignal[0]).show();
+        this._gameUI.leftTeamScoreUI(mod.GetTeam(2), this._teams[1]._scoreSignal[0]).show();
+        this._gameUI.rightTeamScoreUI(mod.GetTeam(2), this._teams[0]._scoreSignal[0]).show();
     }
 }
 

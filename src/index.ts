@@ -49,6 +49,9 @@ function setupGameMode() {
 }
 
 function handlePlayerJoinGame(modPlayer: mod.Player): void {
+    if (mod.GetObjId(modPlayer) === 0) {
+        mod.SetTeam(modPlayer, mod.GetTeam(2))
+    }
     scheduleScoreboardUpdates(modPlayer);
 }
 
