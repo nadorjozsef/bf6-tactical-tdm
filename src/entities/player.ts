@@ -1,8 +1,10 @@
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import type { GameUI } from '../ui/gameUi.ts';
 
-
 export class Player {
+    constructor(private _modPlayer: mod.Player, gameUI: GameUI) {
+        gameUI.playerLivesUI(_modPlayer, this._livesSignal[0]).show();
+    }
     private _livesSignal = SolidUI.createSignal(1);
 
     get id() {
@@ -26,11 +28,4 @@ export class Player {
 
     public score = 0;
     public kills = 0;
-
-    constructor(
-        private _modPlayer: mod.Player,
-        gameUI: GameUI
-    ) {
-        gameUI.playerLivesUI(_modPlayer, this._livesSignal[0]).show();
-    }
 }

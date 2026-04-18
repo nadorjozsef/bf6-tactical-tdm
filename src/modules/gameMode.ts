@@ -1,45 +1,43 @@
 import { Events } from 'bf6-portal-utils/events/index.ts';
-import { Timers } from 'bf6-portal-utils/timers/index.ts';
-import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
 import { getAllPlayers } from '../helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
-import { Global } from '../entities/global.ts';
 import { PlayerManager } from './playerManager.ts';
 import { TeamManager } from './teamManager.ts';
 import { debug } from '../debugTool/adminDebugTool.ts';
-import type { GlobalManager } from './globalManager.ts';
+import type { Reinforcements } from './reinforcements.ts';
+import { Scoreboard } from './scoreboard.ts';
 
-export class GameModeManager {
-    private static _instance: GameModeManager | undefined;
+export class GameMode {
+    private static _instance: GameMode | undefined;
 
     private GAME_MODE_TARGET_SCORE = 15;
     private GAME_MODE_TIMELIMIT = 600;
     private SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
     private constructor(
-        private playerManager: PlayerManager,
-        private teamManager: TeamManager,
-        private globalManager: GlobalManager
+        private _playerManager: PlayerManager,
+        private _teamManager: TeamManager,
+        private _reinforcements: Reinforcements,
+        private _scoreboard: Scoreboard
     ) {
-        Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
         Events.OnPlayerUndeploy.subscribe(this.handlePlayerUndeploy.bind(this));
         Events.OnPlayerDeployed.subscribe(this.handlePlayerDeployed.bind(this));
-
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
         Events.OnPlayerEarnedKill.subscribe(this.handlePlayerEarnedKill.bind(this));
         Events.OnCapturePointCaptured.subscribe(this.handleCapturePointCaptured.bind(this));
-        globalManager.subscribeReinforcementsArrived(this.handleReinforcementsArrived.bind(this));
+        _reinforcements.subscribeReinforcementsArrived(this.handleReinforcementsArrived.bind(this));
     }
 
     static GetInstance(
         playerManager: PlayerManager,
         teamManager: TeamManager,
-        globalManager: GlobalManager
-    ): GameModeManager {
-        if (!GameModeManager._instance) {
-            GameModeManager._instance = new GameModeManager(playerManager, teamManager, globalManager);
+        reinforcements: Reinforcements,
+        scoreboard: Scoreboard
+    ): GameMode {
+        if (!GameMode._instance) {
+            GameMode._instance = new GameMode(playerManager, teamManager, reinforcements, scoreboard);
         }
-        return GameModeManager._instance;
+        return GameMode._instance;
     }
 
     private handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
@@ -47,7 +45,6 @@ export class GameModeManager {
     }
 
     private handleGameModeStarted(): void {
-        this.setupScoreboard();
         mod.SetGameModeTimeLimit(this.GAME_MODE_TIMELIMIT);
         Sounds.preload(this.SOUND_LOOP_2D);
         mod.LoadMusic(mod.MusicPackages.Core);
@@ -57,40 +54,14 @@ export class GameModeManager {
         mod.SetMaxCaptureMultiplier(mod.GetCapturePoint(100), 1);
     }
 
-    private handlePlayerJoinGame(modPlayer: mod.Player): void {
-        // if (mod.GetObjId(modPlayer) === 0) {
-        //     mod.SetTeam(modPlayer, mod.GetTeam(2))
-        // }
-        this.scheduleScoreboardUpdates(modPlayer);
-    }
-
-    private setupScoreboard() {
-        mod.SetScoreboardType(mod.ScoreboardType.CustomTwoTeams);
-        mod.SetScoreboardHeader(mod.Message(mod.stringkeys.scoreboard.team1), mod.Message(mod.stringkeys.scoreboard.team2));
-        mod.SetScoreboardColumnNames(
-            mod.Message(mod.stringkeys.scoreboard.score),
-            mod.Message(mod.stringkeys.scoreboard.kills),
-            mod.Message(mod.stringkeys.scoreboard.lives)
-        );
-        mod.SetScoreboardColumnWidths(1, 1, 1);
-    }
-
-    private updateScoreboard(modPlayer: mod.Player): void {
-        const player = this.playerManager.getPlayer(modPlayer);
-        const score = player.score;
-        const kills = player.kills;
-        const lives = player.lives;
-        mod.SetScoreboardPlayerValues(modPlayer, score, kills, lives);
-    }
-
     private handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void {
         this.updateActivePlayers();
         if (modPlayer === victim) return;
-        const player = this.playerManager.getPlayer(modPlayer);
+        const player = this._playerManager.getPlayer(modPlayer);
         player.kills++;
         player.score += 100;
-        const team1 = this.teamManager.getTeam(1);
-        const team2 = this.teamManager.getTeam(2);
+        const team1 = this._teamManager.getTeam(1);
+        const team2 = this._teamManager.getTeam(2);
         if (player.teamId === 1) {
             team1.score++;
         } else if (player.teamId === 2) {
@@ -101,7 +72,7 @@ export class GameModeManager {
         } else if (team2.score >= this.GAME_MODE_TARGET_SCORE) {
             mod.EndGameMode(mod.GetTeam(2));
         }
-        this.updateScoreboard(modPlayer);
+        this._scoreboard.update(modPlayer);
 
         //Todo: set winning, losing teams, run it once
         if (team1.score === this.GAME_MODE_TARGET_SCORE - 3 || team2.score === this.GAME_MODE_TARGET_SCORE - 3) {
@@ -112,9 +83,9 @@ export class GameModeManager {
     private handleReinforcementsArrived(): void {
         debug?.dynamicLog("second")
         for (const modPlayer of getAllPlayers()) {
-            const player = this.playerManager.getPlayer(modPlayer);
+            const player = this._playerManager.getPlayer(modPlayer);
             player.lives = player.lives + 1;
-            this.updateScoreboard(modPlayer);
+            this._scoreboard.update(modPlayer);
         }
         debug?.dynamicLog("third")
         mod.EnableAllPlayerDeploy(true);
@@ -131,7 +102,7 @@ export class GameModeManager {
     }
 
     private handlePlayerUndeploy(modPlayer: mod.Player): void {
-        const player = this.playerManager.getPlayer(modPlayer);
+        const player = this._playerManager.getPlayer(modPlayer);
         let lives = player.lives;
         if (lives >= 1) {
             lives--;
@@ -141,19 +112,13 @@ export class GameModeManager {
         }
         player.lives = lives;
         this.updateActivePlayers();
-        this.updateScoreboard(modPlayer);
-    }
-
-    private scheduleScoreboardUpdates(modPlayer: mod.Player): void {
-        for (let seconds = 0; seconds <= 5; seconds++) {
-            Timers.setTimeout(() => this.updateScoreboard(modPlayer), seconds * 1000);
-        }
+        this._scoreboard.update(modPlayer);
     }
 
     private updateActivePlayers() {
         let team1ActivePlayers = 0;
         let team2ActivePlayers = 0;
-        for (const player of this.playerManager.getAllPlayers()) {
+        for (const player of this._playerManager.getAllPlayers()) {
             const teamId = player.teamId;
             const isAlive = player.isAlive;
             if (isAlive) {
@@ -164,7 +129,7 @@ export class GameModeManager {
                 }
             }
         }
-        this.teamManager.getTeam(1).activePlayers = team1ActivePlayers;
-        this.teamManager.getTeam(2).activePlayers = team2ActivePlayers;
+        this._teamManager.getTeam(1).activePlayers = team1ActivePlayers;
+        this._teamManager.getTeam(2).activePlayers = team2ActivePlayers;
     }
 }

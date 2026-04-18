@@ -1,17 +1,25 @@
 import { Clocks } from "bf6-portal-utils/clocks/index.ts";
 import { Events } from "bf6-portal-utils/events/index.ts";
-import { Global } from "../entities/global.ts";
 import type { GameUI } from "../ui/gameUi.ts";
 import { debug } from "../debugTool/adminDebugTool.ts";
+import { SolidUI } from "bf6-portal-utils/solid-ui/index.ts";
 
-export class GlobalManager {
+export class Reinforcements {
+    private static _instance: Reinforcements | undefined;
+    private _nextReinforcementsTimeSignal = SolidUI.createSignal(0);
     private DEFAULT_REINFORCEMENTS_TIME = 60;
-    private _global: Global;
     private _onReinforcementsArrived?: () => void;
 
-    constructor(gameUI: GameUI) {
+    private constructor(gameUI: GameUI) {
         Events.OnGameModeStarted.subscribe(this.onGameModeStarted.bind(this));
-        this._global = Global.GetInstance(gameUI);
+        gameUI.displayNextReinforcements(this._nextReinforcementsTimeSignal[0]).show();
+    }
+
+    static getInstance(gameUI: GameUI): Reinforcements {
+        if (!Reinforcements._instance) {
+            Reinforcements._instance = new Reinforcements(gameUI);
+        }
+        return Reinforcements._instance;
     }
 
     public subscribeReinforcementsArrived(callback: () => void): void {
@@ -23,11 +31,18 @@ export class GlobalManager {
     }
 
     private nextReinforcementsClock = new Clocks.CountDownClock(this.DEFAULT_REINFORCEMENTS_TIME, {
-        onSecond: (seconds) => { this._global.nextReinforcementsTime = seconds },
+        onSecond: (seconds) => { this.nextReinforcementsTime = seconds },
         onComplete: () => {
             debug?.dynamicLog('first')
             this._onReinforcementsArrived?.();
             this.nextReinforcementsClock.reset().start();
         },
     });
+
+    get nextReinforcementsTime(): number {
+        return this._nextReinforcementsTimeSignal[0]();
+    }
+    set nextReinforcementsTime(value: number) {
+        this._nextReinforcementsTimeSignal[1](value);
+    }
 }

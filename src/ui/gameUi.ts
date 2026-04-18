@@ -8,7 +8,7 @@ export class GameUI {
 
     private constructor() { }
 
-    static GetInstance(): GameUI {
+    static getInstance(): GameUI {
         if (!GameUI._instance) {
             GameUI._instance = new GameUI();
         }

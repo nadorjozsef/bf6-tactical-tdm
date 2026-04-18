@@ -3,11 +3,19 @@ import type { GameUI } from '../ui/gameUi.ts';
 import { Events } from 'bf6-portal-utils/events/index.ts';
 
 export class PlayerManager {
+    private static _instance: PlayerManager | undefined;
     private _players: Player[] = [];
 
-    constructor(private _gameUI: GameUI) {
+    private constructor(private _gameUI: GameUI) {
         Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
         Events.OnPlayerLeaveGame.subscribe(this.handlePlayerLeaveGame.bind(this));
+    }
+
+    static getInstance(gameUi: GameUI): PlayerManager {
+        if (!PlayerManager._instance) {
+            PlayerManager._instance = new PlayerManager(gameUi);
+        }
+        return PlayerManager._instance;
     }
 
     private handlePlayerJoinGame(modPlayer: mod.Player): void {

@@ -1,14 +1,22 @@
 import { Events } from "bf6-portal-utils/events/index.ts";
 import { Team } from "../entities/team.ts";
-import type { GameUI } from "../ui/gameUi.ts";
+import { GameUI } from "../ui/gameUi.ts";
 
 export class TeamManager {
+    private static _instance: TeamManager | undefined;
     private _teams: Team[] = [];
 
-    constructor(private _gameUI: GameUI) {
+    private constructor(private _gameUI: GameUI) {
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
         this._teams.push(new Team(mod.GetTeam(1)));
         this._teams.push(new Team(mod.GetTeam(2)));
+    }
+
+    static getInstance(gameUI: GameUI): TeamManager {
+        if (!TeamManager._instance) {
+            TeamManager._instance = new TeamManager(gameUI);
+        }
+        return TeamManager._instance;
     }
 
     public getTeam(teamId: number) {

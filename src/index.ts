@@ -1,12 +1,14 @@
-import { GameModeManager } from "./managers/gameModeManager.ts";
+import { GameMode } from "./modules/gameMode.ts";
 import { GameUI } from './ui/gameUi.ts';
-import { PlayerManager } from './managers/playerManager.ts';
-import { TeamManager } from './managers/teamManager.ts';
-import { GlobalManager } from "./managers/globalManager.ts";
+import { PlayerManager } from './modules/playerManager.ts';
+import { TeamManager } from './modules/teamManager.ts';
+import { Reinforcements } from "./modules/reinforcements.ts";
+import { Scoreboard } from "./modules/scoreboard.ts";
 
-const gameUI = GameUI.GetInstance();
-const playerManager = new PlayerManager(gameUI);
-const teamManager = new TeamManager(gameUI);
-const globalManager = new GlobalManager(gameUI);
+const gameUI = GameUI.getInstance();
+const playerManager = PlayerManager.getInstance(gameUI);
+const scoreboard = Scoreboard.getInstance(playerManager);
+const teamManager = TeamManager.getInstance(gameUI);
+const globalManager = Reinforcements.getInstance(gameUI);
 
-GameModeManager.GetInstance(playerManager, teamManager, globalManager);
+GameMode.GetInstance(playerManager, teamManager, globalManager, scoreboard);
