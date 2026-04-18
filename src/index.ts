@@ -22,11 +22,11 @@ Events.OnGameModeStarted.subscribe(handleGameModeStarted);
 Events.OnPlayerEarnedKill.subscribe(handlePlayerEarnedKill);
 Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured);
 
-const gameUI = new GameUI();
+const gameUI = GameUI.GetInstance();
 const playerManager = new PlayerManager(gameUI);
 const team1 = new Team(1, gameUI);
 const team2 = new Team(2, gameUI);
-const game = new Game(gameUI);
+const game = Game.GetInstance(gameUI);
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     // const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
@@ -47,8 +47,8 @@ function setupGameMode() {
     mod.SetGameModeTimeLimit(GAME_MODE_TIMELIMIT);
 }
 
-function handlePlayerJoinGame(player: mod.Player): void {
-    scheduleScoreboardUpdates(player);
+function handlePlayerJoinGame(modPlayer: mod.Player): void {
+    scheduleScoreboardUpdates(modPlayer);
 }
 
 function setupScoreboard() {

@@ -4,6 +4,17 @@ import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
 export class GameUI {
+    private static _instance: GameUI | undefined;
+
+    private constructor() { }
+
+    static GetInstance(): GameUI {
+        if (!GameUI._instance) {
+            GameUI._instance = new GameUI();
+        }
+        return GameUI._instance;
+    }
+
     public playerLivesUI(player: mod.Player, livesSignal: SolidUI.Accessor<number>): UIContainer {
         const livesUI = SolidUI.h(UIContainer, {
             position: { x: 300, y: 60 },
@@ -124,6 +135,7 @@ export class GameUI {
     }
 
     public activePlayersUI(
+        team: mod.Team,
         team1ActivePlayerSignal: SolidUI.Accessor<number>,
         team2ActivePlayerSignal: SolidUI.Accessor<number>
     ): UIContainer {
@@ -134,6 +146,7 @@ export class GameUI {
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 0,
             bgFill: mod.UIBgFill.None,
+            receiver: team,
         });
 
         SolidUI.h(UIText, {
@@ -148,6 +161,7 @@ export class GameUI {
             textSize: 24,
             textAnchor: mod.UIAnchor.Center,
             parent: playerCountContainer,
+            receiver: team,
         });
 
         SolidUI.h(UIText, {
@@ -162,6 +176,7 @@ export class GameUI {
             textSize: 24,
             textAnchor: mod.UIAnchor.Center,
             parent: playerCountContainer,
+            receiver: team,
         });
 
         SolidUI.h(UIText, {
@@ -175,7 +190,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.None,
             message: mod.Message(mod.stringkeys.activePlayersTextCenter),
             textColor: mod.CreateVector(1, 1, 1),
-            textSize: 24,
+            textSize: 30,
             textAnchor: mod.UIAnchor.Center,
             parent: playerCountContainer,
         });
