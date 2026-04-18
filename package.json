@@ -1,7 +1,7 @@
 {
     "name": "tactical-ttdm",
     "experienceName": "Tactical TDM",
-    "version": "1.0.60",
+    "version": "1.0.62",
     "type": "module",
     "description": "",
     "engines": {

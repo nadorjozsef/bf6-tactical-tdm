@@ -4,10 +4,10 @@ import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
 import { getAllPlayers } from './helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 import { GameUI } from './ui/gameUi.ts';
-import { Team, TeamManager } from './entities/team.ts';
 import { Game } from './entities/game.ts';
 import { PlayerManager } from './managers/playerManager.ts';
 import { debug } from './debugTool/adminDebugTool.ts';
+import { TeamManager } from './managers/teamManager.ts';
 
 const DEFAULT_REINFORCEMENTS_TIME = 60;
 const GAME_MODE_TARGET_SCORE = 15;
@@ -26,8 +26,8 @@ const gameUI = GameUI.GetInstance();
 const playerManager = new PlayerManager(gameUI);
 const game = Game.GetInstance(gameUI);
 const teamManager = new TeamManager(gameUI);
-const team1 = teamManager.getTeam1();
-const team2 = teamManager.getTeam2();
+const team1 = teamManager.getTeam(1);
+const team2 = teamManager.getTeam(2);
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     // const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
@@ -49,9 +49,9 @@ function setupGameMode() {
 }
 
 function handlePlayerJoinGame(modPlayer: mod.Player): void {
-    if (mod.GetObjId(modPlayer) === 0) {
-        mod.SetTeam(modPlayer, mod.GetTeam(2))
-    }
+    // if (mod.GetObjId(modPlayer) === 0) {
+    //     mod.SetTeam(modPlayer, mod.GetTeam(2))
+    // }
     scheduleScoreboardUpdates(modPlayer);
 }
 
@@ -163,6 +163,6 @@ function updateActivePlayers() {
             }
         }
     }
-    teamManager.getTeam1().activePlayers = team1ActivePlayers;
-    teamManager.getTeam2().activePlayers = team2ActivePlayers;
+    team1.activePlayers = team1ActivePlayers;
+    team2.activePlayers = team2ActivePlayers;
 }
