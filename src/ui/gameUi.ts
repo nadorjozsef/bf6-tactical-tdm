@@ -38,7 +38,7 @@ export class GameUI {
         return livesUI;
     }
 
-    public leftTeamScoreUI(scoreSignal: SolidUI.Accessor<number>): UIContainer {
+    public leftTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
         const scoreContainer = SolidUI.h(UIContainer, {
             position: { x: -120, y: 60 },
             size: { width: 100, height: 50 },
@@ -47,6 +47,7 @@ export class GameUI {
             bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.Solid,
+            receiver: team,
         });
         SolidUI.h(UIText, {
             position: { x: 0, y: 0 },
@@ -60,11 +61,12 @@ export class GameUI {
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
             parent: scoreContainer,
+            receiver: team,
         });
         return scoreContainer;
     }
 
-    public rightTeamScoreUI(scoreSignal: SolidUI.Accessor<number>): UIContainer {
+    public rightTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
         const scoreContainer = SolidUI.h(UIContainer, {
             position: { x: 120, y: 60 },
             size: { width: 100, height: 50 },
@@ -73,6 +75,7 @@ export class GameUI {
             bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.Solid,
+            receiver: team,
         });
         SolidUI.h(UIText, {
             position: { x: 0, y: 0 },
@@ -86,6 +89,7 @@ export class GameUI {
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
             parent: scoreContainer,
+            receiver: team,
         });
         return scoreContainer;
     }
@@ -136,8 +140,8 @@ export class GameUI {
 
     public activePlayersUI(
         team: mod.Team,
-        team1ActivePlayerSignal: SolidUI.Accessor<number>,
-        team2ActivePlayerSignal: SolidUI.Accessor<number>
+        leftActivePlayerSignal: SolidUI.Accessor<number>,
+        tightActivePlayerSignal: SolidUI.Accessor<number>
     ): UIContainer {
         const playerCountContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 130 },
@@ -156,7 +160,7 @@ export class GameUI {
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 1,
             bgFill: mod.UIBgFill.None,
-            message: () => mod.Message(mod.stringkeys.team1ActivePlayersText, team1ActivePlayerSignal()),
+            message: () => mod.Message(mod.stringkeys.team1ActivePlayersText, leftActivePlayerSignal()),
             textColor: mod.CreateVector(0.4392, 0.9216, 1),
             textSize: 24,
             textAnchor: mod.UIAnchor.Center,
@@ -171,7 +175,7 @@ export class GameUI {
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 1,
             bgFill: mod.UIBgFill.None,
-            message: () => mod.Message(mod.stringkeys.team2ActivePlayersText, team2ActivePlayerSignal()),
+            message: () => mod.Message(mod.stringkeys.team2ActivePlayersText, tightActivePlayerSignal()),
             textColor: mod.CreateVector(1, 0.5137, 0.3804),
             textSize: 24,
             textAnchor: mod.UIAnchor.Center,

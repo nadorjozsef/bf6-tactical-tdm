@@ -4,7 +4,7 @@ import { Clocks } from 'bf6-portal-utils/clocks/index.ts';
 import { getAllPlayers } from './helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 import { GameUI } from './ui/gameUi.ts';
-import { Team } from './entities/team.ts';
+import { Team, TeamManager } from './entities/team.ts';
 import { Game } from './entities/game.ts';
 import { PlayerManager } from './managers/playerManager.ts';
 import { debug } from './debugTool/adminDebugTool.ts';
@@ -24,9 +24,10 @@ Events.OnCapturePointCaptured.subscribe(handleCapturePointCaptured);
 
 const gameUI = GameUI.GetInstance();
 const playerManager = new PlayerManager(gameUI);
-const team1 = new Team(1, gameUI);
-const team2 = new Team(2, gameUI);
 const game = Game.GetInstance(gameUI);
+const teamManager = new TeamManager(gameUI);
+const team1 = teamManager.getTeam1();
+const team2 = teamManager.getTeam2();
 
 function handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
     // const ownerTeam = mod.GetCurrentOwnerTeam(capturePoint);
@@ -159,6 +160,6 @@ function updateActivePlayers() {
             }
         }
     }
-    game.team1ActivePlayers = team1ActivePlayers;
-    game.team2ActivePlayers = team2ActivePlayers;
+    teamManager.getTeam1().activePlayers = team1ActivePlayers;
+    teamManager.getTeam2().activePlayers = team2ActivePlayers;
 }
