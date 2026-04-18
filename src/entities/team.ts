@@ -1,6 +1,4 @@
-import { Events } from 'bf6-portal-utils/events/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
-import type { GameUI } from '../ui/gameUi.ts';
 
 export class Team {
     private _id;

@@ -25,7 +25,7 @@ export class PlayerManager {
     public getPlayerById(playerId: number): Player {
         const player = this._players.find((players) => players.id === playerId);
         if (!player) {
-            throw 'Soldier has not found!';
+            throw 'Player has not found!';
         }
         return player;
     }
