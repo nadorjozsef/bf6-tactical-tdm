@@ -30,20 +30,36 @@ export class PlayerManager {
         }
     }
 
-    public getPlayerById(playerId: number): Player {
+    public getPlayer(modPlayer: mod.Player): Player;
+    public getPlayer(playerId: number): Player;
+
+    public getPlayer(player: mod.Player | number): Player {
+        let playerId: number;
+        if (typeof player === 'number') {
+            playerId = player;
+        } else {
+            playerId = mod.GetObjId(player);
+        }
+        return this.getPlayerById(playerId);
+    }
+
+    public getPlayers(modPlayers: mod.Player[]): Player[] {
+        const players: Player[] = [];
+        for (const modPlayer of modPlayers) {
+            players.push(this.getPlayer(modPlayer));
+        }
+        return players;
+    }
+
+    public getAllPlayers(): Player[] {
+        return this._players;
+    }
+
+    private getPlayerById(playerId: number): Player {
         const player = this._players.find((players) => players.id === playerId);
         if (!player) {
             throw 'Player has not found!';
         }
         return player;
-    }
-
-    public getPlayer(player: mod.Player): Player {
-        const playerId = mod.GetObjId(player);
-        return this.getPlayerById(playerId);
-    }
-
-    public getAllPlayers(): Player[] {
-        return this._players;
     }
 }

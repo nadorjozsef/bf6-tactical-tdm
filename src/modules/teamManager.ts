@@ -19,7 +19,16 @@ export class TeamManager {
         return TeamManager._instance;
     }
 
-    public getTeam(teamId: number) {
+    public getTeam(modTeam: mod.Team): Team;
+    public getTeam(teamId: number): Team;
+
+    public getTeam(team: number | mod.Team): Team {
+        let teamId: number;
+        if (typeof team === 'number') {
+            teamId = team;
+        } else {
+            teamId = mod.GetObjId(team);
+        }
         return this._teams[teamId - 1];
     }
 

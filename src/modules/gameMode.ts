@@ -11,7 +11,7 @@ import { convertArray } from '../helpers/index.ts';
 export class GameMode {
     private static _instance: GameMode | undefined;
 
-    private GAME_MODE_TARGET_SCORE = 30;
+    private GAME_MODE_TARGET_SCORE = 50;
     private GAME_MODE_TIMELIMIT = 600;
     private SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
@@ -43,13 +43,10 @@ export class GameMode {
 
     private handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
         const modTeam = mod.GetCurrentOwnerTeam(capturePoint);
-        const teamId = mod.GetObjId(modTeam);
-        this._teamManager.getTeam(teamId).score += 10;
-
+        this._teamManager.getTeam(modTeam).score += 10;
         const modPlayersArray = mod.GetPlayersOnPoint(capturePoint)
         const modPlayers = convertArray<mod.Player>(modPlayersArray);
-        for (const modPlayer of modPlayers) {
-            const player = this._playerManager.getPlayer(modPlayer);
+        for (const player of this._playerManager.getPlayers(modPlayers)) {
             player.score += 300;
         }
     }
