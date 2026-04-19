@@ -1,11 +1,11 @@
 import { Events } from 'bf6-portal-utils/events/index.ts';
-import { getAllPlayers } from '../helpers/index.ts';
 import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 import { PlayerManager } from './playerManager.ts';
 import { TeamManager } from './teamManager.ts';
-import { debug } from '../debugTool/adminDebugTool.ts';
 import type { Reinforcements } from './reinforcements.ts';
 import { Scoreboard } from './scoreboard.ts';
+import type { Player } from '../entities/player.ts';
+import type { Team } from '../entities/team.ts';
 
 export class GameMode {
     private static _instance: GameMode | undefined;
@@ -56,12 +56,23 @@ export class GameMode {
 
     private handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void {
         this.updateActivePlayers();
-        if (modPlayer === victim) return;
+        if (modPlayer === victim) {
+            return
+        };
         const player = this._playerManager.getPlayer(modPlayer);
-        player.kills++;
-        player.score += 100;
         const team1 = this._teamManager.getTeam(1);
         const team2 = this._teamManager.getTeam(2);
+        this.updateTeamScore(player, team1, team2);
+        this.updatePlayerScore(player);
+        this._scoreboard.update(modPlayer);
+
+        //Todo: set winning, losing teams, run it once
+        if (team1.score === this.GAME_MODE_TARGET_SCORE - 3 || team2.score === this.GAME_MODE_TARGET_SCORE - 3) {
+            mod.PlayMusic(mod.MusicEvents.Core_LastPhaseBegin);
+        }
+    }
+
+    private updateTeamScore(player: Player, team1: Team, team2: Team) {
         if (player.teamId === 1) {
             team1.score++;
         } else if (player.teamId === 2) {
@@ -72,29 +83,23 @@ export class GameMode {
         } else if (team2.score >= this.GAME_MODE_TARGET_SCORE) {
             mod.EndGameMode(mod.GetTeam(2));
         }
-        this._scoreboard.update(modPlayer);
+    }
 
-        //Todo: set winning, losing teams, run it once
-        if (team1.score === this.GAME_MODE_TARGET_SCORE - 3 || team2.score === this.GAME_MODE_TARGET_SCORE - 3) {
-            mod.PlayMusic(mod.MusicEvents.Core_LastPhaseBegin);
-        }
+    private updatePlayerScore(player: Player) {
+        player.kills++;
+        player.score += 100;
     }
 
     private handleReinforcementsArrived(): void {
-        debug?.dynamicLog("second")
-        for (const modPlayer of getAllPlayers()) {
-            const player = this._playerManager.getPlayer(modPlayer);
+        for (const player of this._playerManager.getAllPlayers()) {
             player.lives = player.lives + 1;
-            this._scoreboard.update(modPlayer);
+            this._scoreboard.update(player.modPlayer);
         }
-        debug?.dynamicLog("third")
         mod.EnableAllPlayerDeploy(true);
         Sounds.play2D(this.SOUND_LOOP_2D, {
             amplitude: 1,
             duration: 2000,
         });
-        debug?.dynamicLog("fourth")
-        debug?.dynamicLog('' + this.GAME_MODE_TARGET_SCORE)
     }
 
     private handlePlayerDeployed(): void {
@@ -103,14 +108,12 @@ export class GameMode {
 
     private handlePlayerUndeploy(modPlayer: mod.Player): void {
         const player = this._playerManager.getPlayer(modPlayer);
-        let lives = player.lives;
-        if (lives >= 1) {
-            lives--;
+        if (player.lives >= 1) {
+            player.lives--;
         }
-        if (lives <= 0) {
+        if (player.lives <= 0) {
             mod.EnablePlayerDeploy(modPlayer, false);
         }
-        player.lives = lives;
         this.updateActivePlayers();
         this._scoreboard.update(modPlayer);
     }

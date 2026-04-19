@@ -33,7 +33,6 @@ export class Reinforcements {
     private nextReinforcementsClock = new Clocks.CountDownClock(this.DEFAULT_REINFORCEMENTS_TIME, {
         onSecond: (seconds) => { this.nextReinforcementsTime = seconds },
         onComplete: () => {
-            debug?.dynamicLog('first')
             this._onReinforcementsArrived?.();
             this.nextReinforcementsClock.reset().start();
         },

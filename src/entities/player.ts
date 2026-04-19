@@ -11,6 +11,10 @@ export class Player {
         return mod.GetObjId(this._modPlayer);
     }
 
+    get modPlayer() {
+        return this._modPlayer;
+    }
+
     get teamId() {
         return mod.GetObjId(mod.GetTeam(this._modPlayer));
     }
