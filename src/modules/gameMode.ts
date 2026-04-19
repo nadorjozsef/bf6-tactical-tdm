@@ -7,6 +7,7 @@ import { Scoreboard } from './scoreboard.ts';
 import type { Player } from '../entities/player.ts';
 import type { Team } from '../entities/team.ts';
 import { convertArray } from '../helpers/index.ts';
+import { debug } from '../debugTool/adminDebugTool.ts';
 
 export class GameMode {
     private static _instance: GameMode | undefined;
@@ -63,6 +64,7 @@ export class GameMode {
 
     private handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void {
         this.updateActivePlayers();
+        this.reduceTimeIfNoActivePlayer();
         if (modPlayer === victim) {
             return
         };
@@ -73,8 +75,8 @@ export class GameMode {
         this.updatePlayerScore(player);
         this._scoreboard.update(modPlayer);
 
-        //Todo: set winning, losing teams, run it once
-        if (team1.score === this.GAME_MODE_TARGET_SCORE - 3 || team2.score === this.GAME_MODE_TARGET_SCORE - 3) {
+        // Todo: set winning, losing teams?, repeat?
+        if (team1.score === this.GAME_MODE_TARGET_SCORE - 5 || team2.score === this.GAME_MODE_TARGET_SCORE - 5) {
             mod.PlayMusic(mod.MusicEvents.Core_LastPhaseBegin);
         }
     }
@@ -123,6 +125,12 @@ export class GameMode {
         }
         this.updateActivePlayers();
         this._scoreboard.update(modPlayer);
+    }
+
+    private reduceTimeIfNoActivePlayer() {
+        if (this._teamManager.getTeam(1).activePlayers === 0 || this._teamManager.getTeam(2).activePlayers === 0) {
+            this._reinforcements.reduceTime();
+        }
     }
 
     private updateActivePlayers() {
