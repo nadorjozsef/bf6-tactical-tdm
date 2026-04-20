@@ -54,7 +54,6 @@ export class GameMode {
 
     private handleGameModeStarted(): void {
         mod.SetGameModeTimeLimit(this.GAME_MODE_TIMELIMIT);
-        Sounds.preload(this.SOUND_LOOP_2D);
         mod.LoadMusic(mod.MusicPackages.Core);
         mod.EnableGameModeObjective(mod.GetCapturePoint(100), true);
         mod.SetCapturePointCapturingTime(mod.GetCapturePoint(100), 10);
@@ -105,7 +104,7 @@ export class GameMode {
             this._scoreboard.update(player.modPlayer);
         }
         mod.EnableAllPlayerDeploy(true);
-        Sounds.play2D(this.SOUND_LOOP_2D, {
+        Sounds.Sound2D.play(this.SOUND_LOOP_2D, {
             amplitude: 1,
             duration: 2000,
         });
