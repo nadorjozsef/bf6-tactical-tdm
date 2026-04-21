@@ -15,6 +15,73 @@ export class GameUI {
         return GameUI._instance;
     }
 
+    public createscore_Copy(): UIContainer {
+        const container = SolidUI.h(UIContainer, {
+            position: { x: 0, y: 95 },
+            size: { width: 32, height: 32 },
+            bgColor: UI.COLORS.BF_BLUE_DARK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 0.75,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter
+        });
+
+        SolidUI.h(UIText, {
+            message: () => mod.Message(mod.stringkeys.score, 'A'),
+            textSize: 24,
+            width: 32,
+            textColor: UI.COLORS.BF_BLUE_BRIGHT,
+            parent: container,
+        });
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 32, height: 2 },
+            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter,
+            parent: container
+        });
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 32, height: 2 },
+            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.BottomCenter,
+            parent: container
+        });
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 2, height: 32 },
+            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.CenterLeft,
+            parent: container
+        });
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 2, height: 32 },
+            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.CenterRight,
+            parent: container
+        });
+
+        return container;
+    }
+
     public createscore(): UIContainer {
         const container = SolidUI.h(UIContainer, {
             position: { x: -233, y: 54 },
@@ -38,28 +105,28 @@ export class GameUI {
         return container;
     }
 
-    public createscore2(): UIContainer {
-        const container = SolidUI.h(UIContainer, {
-            position: { x: 0, y: 95 },
-            size: { width: 38, height: 38 },
-            bgColor: UI.COLORS.BF_BLUE_DARK,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter
-        });
+    // public createscore2(): UIContainer {
+    //     const container = SolidUI.h(UIContainer, {
+    //         position: { x: 0, y: 95 },
+    //         size: { width: 38, height: 38 },
+    //         bgColor: UI.COLORS.BF_BLUE_DARK,
+    //         bgFill: mod.UIBgFill.Solid,
+    //         bgAlpha: 0.75,
+    //         visible: true,
+    //         depth: mod.UIDepth.BelowGameUI,
+    //         anchor: mod.UIAnchor.TopCenter
+    //     });
 
-        SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.score, 'A'),
-            textSize: 26,
-            width: 38,
-            textColor: UI.COLORS.BF_BLUE_BRIGHT,
-            parent: container,
-        });
+    //     SolidUI.h(UIText, {
+    //         message: () => mod.Message(mod.stringkeys.score, 'A'),
+    //         textSize: 26,
+    //         width: 38,
+    //         textColor: UI.COLORS.BF_BLUE_BRIGHT,
+    //         parent: container,
+    //     });
 
-        return container;
-    }
+    //     return container;
+    // }
 
     public createsCP(): UIContainer {
         const container = SolidUI.h(UIContainer, {

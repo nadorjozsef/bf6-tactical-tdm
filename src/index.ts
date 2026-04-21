@@ -12,7 +12,7 @@ const teamManager = TeamManager.getInstance(gameUI);
 const globalManager = Reinforcements.getInstance(gameUI);
 
 gameUI.createscore();
-gameUI.createscore2();
+gameUI.createscore_Copy();
 gameUI.createleftLine();
 gameUI.createrightLine();
 gameUI.createsCP();
