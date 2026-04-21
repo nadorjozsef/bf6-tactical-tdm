@@ -11,4 +11,10 @@ const scoreboard = Scoreboard.getInstance(playerManager);
 const teamManager = TeamManager.getInstance(gameUI);
 const globalManager = Reinforcements.getInstance(gameUI);
 
+gameUI.createscore();
+gameUI.createscore2();
+gameUI.createleftLine();
+gameUI.createrightLine();
+gameUI.createsCP();
+
 GameMode.GetInstance(playerManager, teamManager, globalManager, scoreboard);

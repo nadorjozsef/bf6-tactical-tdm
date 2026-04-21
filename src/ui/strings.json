@@ -45,5 +45,6 @@
     "reinforcementsTime": "{}",
     "team1ActivePlayersText": "{}",
     "activePlayersTextCenter": "vs",
-    "team2ActivePlayersText": "{}"
+    "team2ActivePlayersText": "{}",
+    "score": "{}"
 }

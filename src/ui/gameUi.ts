@@ -15,6 +15,129 @@ export class GameUI {
         return GameUI._instance;
     }
 
+    public createscore(): UIContainer {
+        const container = SolidUI.h(UIContainer, {
+            position: { x: -233, y: 54 },
+            size: { width: 84, height: 34 },
+            bgColor: UI.COLORS.BF_BLUE_DARK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 0.75,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter
+        });
+
+        SolidUI.h(UIText, {
+            message: () => mod.Message(mod.stringkeys.score, 28),
+            textSize: 34,
+            width: 84,
+            textColor: UI.COLORS.BF_BLUE_BRIGHT,
+            parent: container,
+        });
+
+        return container;
+    }
+
+    public createscore2(): UIContainer {
+        const container = SolidUI.h(UIContainer, {
+            position: { x: 0, y: 95 },
+            size: { width: 38, height: 38 },
+            bgColor: UI.COLORS.BF_BLUE_DARK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 0.75,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter
+        });
+
+        SolidUI.h(UIText, {
+            message: () => mod.Message(mod.stringkeys.score, 'A'),
+            textSize: 26,
+            width: 38,
+            textColor: UI.COLORS.BF_BLUE_BRIGHT,
+            parent: container,
+        });
+
+        return container;
+    }
+
+    public createsCP(): UIContainer {
+        const container = SolidUI.h(UIContainer, {
+            position: { x: 233, y: 54 },
+            size: { width: 84, height: 34 },
+            bgColor: UI.COLORS.BF_RED_DARK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 0.75,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter
+        });
+
+        SolidUI.h(UIText, {
+            message: () => mod.Message(mod.stringkeys.score, 26),
+            textSize: 34,
+            width: 84,
+            textColor: UI.COLORS.BF_RED_BRIGHT,
+            parent: container,
+        });
+
+        return container;
+    }
+
+    public createleftLine(): UIContainer {
+        const container = SolidUI.h(UIContainer, {
+            position: { x: -94, y: 64 },
+            size: { width: 178, height: 12 },
+            bgColor: UI.COLORS.BF_BLUE_DARK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter
+        });
+
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 100, height: 12 },
+            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.CenterLeft,
+            parent: container
+        });
+
+        return container;
+    }
+
+    public createrightLine(): UIContainer {
+        const container = SolidUI.h(UIContainer, {
+            position: { x: 94, y: 64 },
+            size: { width: 178, height: 12 },
+            bgColor: UI.COLORS.BF_RED_DARK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter
+        });
+
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 100, height: 12 },
+            bgColor: UI.COLORS.BF_RED_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.CenterRight,
+            parent: container
+        });
+
+        return container;
+    }
+
     public playerLivesUI(player: mod.Player, livesSignal: SolidUI.Accessor<number>): UIContainer {
         const livesUI = SolidUI.h(UIContainer, {
             position: { x: 300, y: 60 },
@@ -22,7 +145,7 @@ export class GameUI {
             bgColor: UI.COLORS.BLACK,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
-            visible: true,
+            visible: false,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.TopCenter,
             receiver: player,
@@ -31,6 +154,7 @@ export class GameUI {
             message: () => mod.Message(mod.stringkeys.lifeCount, livesSignal()),
             textSize: 20,
             width: 80,
+            visible: false,
             textColor: UI.COLORS.WHITE,
             receiver: player,
             parent: livesUI,
@@ -43,7 +167,7 @@ export class GameUI {
             position: { x: -120, y: 60 },
             size: { width: 100, height: 50 },
             anchor: mod.UIAnchor.TopCenter,
-            visible: true,
+            visible: false,
             bgColor: mod.CreateVector(0.0745, 0.1843, 0.2471),
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.Solid,
@@ -53,7 +177,7 @@ export class GameUI {
             position: { x: 0, y: 0 },
             size: { width: 100, height: 50 },
             anchor: mod.UIAnchor.Center,
-            visible: true,
+            visible: false,
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.None,
             message: () => mod.Message(mod.stringkeys.team1Score, scoreSignal()),
@@ -71,7 +195,7 @@ export class GameUI {
             position: { x: 120, y: 60 },
             size: { width: 100, height: 50 },
             anchor: mod.UIAnchor.TopCenter,
-            visible: true,
+            visible: false,
             bgColor: mod.CreateVector(0.251, 0.0941, 0.0667),
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.Solid,
@@ -81,7 +205,7 @@ export class GameUI {
             position: { x: 0, y: 0 },
             size: { width: 100, height: 50 },
             anchor: mod.UIAnchor.Center,
-            visible: true,
+            visible: false,
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.None,
             message: () => mod.Message(mod.stringkeys.team1Score, scoreSignal()),
@@ -99,7 +223,7 @@ export class GameUI {
             position: { x: 0, y: 60 },
             size: { width: 100, height: 50 },
             anchor: mod.UIAnchor.TopCenter,
-            visible: true,
+            visible: false,
             bgColor: mod.CreateVector(0.3294, 0.3686, 0.3882),
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.Solid,
@@ -109,7 +233,7 @@ export class GameUI {
             position: { x: 0, y: 0 },
             size: { width: 100, height: 34.79 },
             anchor: mod.UIAnchor.BottomCenter,
-            visible: true,
+            visible: false,
             bgColor: mod.CreateVector(0.4392, 0.9216, 1),
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.None,
@@ -124,7 +248,7 @@ export class GameUI {
             position: { x: 0, y: 0 },
             size: { width: 100, height: 20.24 },
             anchor: mod.UIAnchor.TopCenter,
-            visible: true,
+            visible: false,
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 1,
             bgFill: mod.UIBgFill.None,
@@ -148,6 +272,7 @@ export class GameUI {
             size: { width: 150, height: 50 },
             anchor: mod.UIAnchor.TopCenter,
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
+            visible: false,
             bgAlpha: 0,
             bgFill: mod.UIBgFill.None,
             receiver: team,
@@ -159,6 +284,7 @@ export class GameUI {
             anchor: mod.UIAnchor.CenterLeft,
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 1,
+            visible: false,
             bgFill: mod.UIBgFill.None,
             message: () => mod.Message(mod.stringkeys.team1ActivePlayersText, leftActivePlayerSignal()),
             textColor: mod.CreateVector(0.4392, 0.9216, 1),
@@ -174,6 +300,7 @@ export class GameUI {
             anchor: mod.UIAnchor.CenterRight,
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 1,
+            visible: false,
             bgFill: mod.UIBgFill.None,
             message: () => mod.Message(mod.stringkeys.team2ActivePlayersText, tightActivePlayerSignal()),
             textColor: mod.CreateVector(1, 0.5137, 0.3804),
@@ -187,7 +314,7 @@ export class GameUI {
             position: { x: 0, y: 0 },
             size: { width: 50, height: 50 },
             anchor: mod.UIAnchor.Center,
-            visible: true,
+            visible: false,
             padding: 0,
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 1,
