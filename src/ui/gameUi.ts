@@ -2,6 +2,7 @@ import { UI } from 'bf6-portal-utils/ui/index.ts';
 import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
+import { Timers } from 'bf6-portal-utils/timers';
 
 export class GameUI {
     private static _instance: GameUI | undefined;
@@ -15,7 +16,7 @@ export class GameUI {
         return GameUI._instance;
     }
 
-    public createscore_Copy(): UIContainer {
+    public capturePointAIcon(): UIContainer {
         const container = SolidUI.h(UIContainer, {
             position: { x: 0, y: 95 },
             size: { width: 32, height: 32 },
@@ -82,7 +83,23 @@ export class GameUI {
         return container;
     }
 
-    public createscore(): UIContainer {
+    public leftTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
+        const alphaSignal = SolidUI.createSignal(0);
+        SolidUI.createEffect(() => {
+            scoreSignal();
+            const intervalId = Timers.setInterval(() => {
+                alphaSignal[1]((prev) => {
+                    if (prev < 1) {
+                        prev += 0.1;
+                    } else {
+                        prev = 0;
+                        Timers.clearInterval(intervalId);
+                    }
+                    return prev;
+                })
+            }, 100, true);
+
+        });
         const container = SolidUI.h(UIContainer, {
             position: { x: -233, y: 54 },
             size: { width: 84, height: 34 },
@@ -91,44 +108,35 @@ export class GameUI {
             bgAlpha: 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter
+            anchor: mod.UIAnchor.TopCenter,
+            receiver: team,
+        });
+
+        SolidUI.h(UIContainer, {
+            position: { x: -233, y: 54 },
+            size: { width: 84, height: 34 },
+            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: alphaSignal[0],
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.TopCenter,
+            receiver: team,
         });
 
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.score, 28),
+            message: () => mod.Message(mod.stringkeys.team1Score, scoreSignal()),
             textSize: 34,
             width: 84,
             textColor: UI.COLORS.BF_BLUE_BRIGHT,
             parent: container,
+            receiver: team,
         });
 
         return container;
     }
 
-    // public createscore2(): UIContainer {
-    //     const container = SolidUI.h(UIContainer, {
-    //         position: { x: 0, y: 95 },
-    //         size: { width: 38, height: 38 },
-    //         bgColor: UI.COLORS.BF_BLUE_DARK,
-    //         bgFill: mod.UIBgFill.Solid,
-    //         bgAlpha: 0.75,
-    //         visible: true,
-    //         depth: mod.UIDepth.BelowGameUI,
-    //         anchor: mod.UIAnchor.TopCenter
-    //     });
-
-    //     SolidUI.h(UIText, {
-    //         message: () => mod.Message(mod.stringkeys.score, 'A'),
-    //         textSize: 26,
-    //         width: 38,
-    //         textColor: UI.COLORS.BF_BLUE_BRIGHT,
-    //         parent: container,
-    //     });
-
-    //     return container;
-    // }
-
-    public createsCP(): UIContainer {
+    public rightTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
         const container = SolidUI.h(UIContainer, {
             position: { x: 233, y: 54 },
             size: { width: 84, height: 34 },
@@ -137,21 +145,23 @@ export class GameUI {
             bgAlpha: 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter
+            anchor: mod.UIAnchor.TopCenter,
+            receiver: team,
         });
 
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.score, 26),
+            message: () => mod.Message(mod.stringkeys.team2Score, scoreSignal()),
             textSize: 34,
             width: 84,
             textColor: UI.COLORS.BF_RED_BRIGHT,
             parent: container,
+            receiver: team,
         });
 
         return container;
     }
 
-    public createleftLine(): UIContainer {
+    public leftTeamScoreBar(): UIContainer {
         const container = SolidUI.h(UIContainer, {
             position: { x: -94, y: 64 },
             size: { width: 178, height: 12 },
@@ -178,7 +188,7 @@ export class GameUI {
         return container;
     }
 
-    public createrightLine(): UIContainer {
+    public rightTeamScoreBar(): UIContainer {
         const container = SolidUI.h(UIContainer, {
             position: { x: 94, y: 64 },
             size: { width: 178, height: 12 },
@@ -229,7 +239,7 @@ export class GameUI {
         return livesUI;
     }
 
-    public leftTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
+    public old_leftTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
         const scoreContainer = SolidUI.h(UIContainer, {
             position: { x: -120, y: 60 },
             size: { width: 100, height: 50 },
@@ -257,7 +267,7 @@ export class GameUI {
         return scoreContainer;
     }
 
-    public rightTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
+    public old_rightTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
         const scoreContainer = SolidUI.h(UIContainer, {
             position: { x: 120, y: 60 },
             size: { width: 100, height: 50 },
