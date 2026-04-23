@@ -31,5 +31,5 @@ export class Player {
     }
 
     public score = 0;
-    public kills = 0;
+    public kills = 10;
 }
