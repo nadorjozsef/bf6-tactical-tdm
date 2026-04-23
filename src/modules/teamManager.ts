@@ -35,6 +35,7 @@ export class TeamManager {
     private handleGameModeStarted(): void {
         this.showActivePlayers();
         this.showScores();
+        this.showTeamScoreBar();
     }
 
     private showActivePlayers() {
@@ -47,5 +48,12 @@ export class TeamManager {
         this._gameUI.teamScoreUI(mod.GetTeam(1), this.getTeam(2).scoreSignal[0], 'rightVariant');
         this._gameUI.teamScoreUI(mod.GetTeam(2), this.getTeam(2).scoreSignal[0], 'leftVariant');
         this._gameUI.teamScoreUI(mod.GetTeam(2), this.getTeam(1).scoreSignal[0], 'rightVariant');
+    }
+
+    private showTeamScoreBar() {
+        this._gameUI.teamScoreBar(mod.GetTeam(1), this.getTeam(1).scoreSignal[0], 'leftVariant', 50);
+        this._gameUI.teamScoreBar(mod.GetTeam(1), this.getTeam(2).scoreSignal[0], 'rightVariant', 50);
+        this._gameUI.teamScoreBar(mod.GetTeam(2), this.getTeam(2).scoreSignal[0], 'leftVariant', 50);
+        this._gameUI.teamScoreBar(mod.GetTeam(2), this.getTeam(1).scoreSignal[0], 'rightVariant', 50);
     }
 }

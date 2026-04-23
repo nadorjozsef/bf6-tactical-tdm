@@ -3,6 +3,7 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import { Timers } from 'bf6-portal-utils/timers';
+import { debug } from '../debugTool/adminDebugTool';
 
 export class GameUI {
     private static _instance: GameUI | undefined;
@@ -148,55 +149,50 @@ export class GameUI {
         return container;
     }
 
-    public leftTeamScoreBar(): UIContainer {
-        const container = SolidUI.h(UIContainer, {
+    public teamScoreBar(team: mod.Team, scoreSignal: SolidUI.Accessor<number>, variantName: 'leftVariant' | 'rightVariant', maxScore: number): UIContainer {
+        const CONTAINER_WIDTH = 178;
+        const [widthSignal, setWidthSignal] = SolidUI.createSignal(0);
+        SolidUI.createEffect(() => {
+            const teamScorePercentige = scoreSignal() / maxScore * 100;
+            setWidthSignal(+(teamScorePercentige / 100 * CONTAINER_WIDTH).toFixed(0));
+        });
+        const leftVariant = {
             position: { x: -94, y: 64 },
-            size: { width: 178, height: 12 },
-            bgColor: UI.COLORS.BF_BLUE_DARK,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter
-        });
-
-        SolidUI.h(UIContainer, {
-            position: { x: 0, y: 0 },
-            size: { width: 100, height: 12 },
-            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.CenterLeft,
-            parent: container
-        });
-
-        return container;
-    }
-
-    public rightTeamScoreBar(): UIContainer {
-        const container = SolidUI.h(UIContainer, {
+            darkColor: UI.COLORS.BF_BLUE_DARK,
+            brightColor: UI.COLORS.BF_BLUE_BRIGHT,
+            anchor: mod.UIAnchor.TopLeft
+        }
+        const rightVariant = {
             position: { x: 94, y: 64 },
-            size: { width: 178, height: 12 },
-            bgColor: UI.COLORS.BF_RED_DARK,
+            darkColor: UI.COLORS.BF_RED_DARK,
+            brightColor: UI.COLORS.BF_RED_BRIGHT,
+            anchor: mod.UIAnchor.TopRight
+        }
+        const variant = variantName === 'leftVariant' ? leftVariant : rightVariant;
+        const container = SolidUI.h(UIContainer, {
+            position: variant.position,
+            size: { width: CONTAINER_WIDTH, height: 12 },
+            bgColor: variant.darkColor,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 1,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter
+            anchor: mod.UIAnchor.TopCenter,
+            receiver: team,
         });
 
         SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
-            size: { width: 100, height: 12 },
-            bgColor: UI.COLORS.BF_RED_BRIGHT,
+            width: widthSignal,
+            height: 12,
+            bgColor: variant.brightColor,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 1,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.CenterRight,
-            parent: container
+            anchor: variant.anchor,
+            parent: container,
+            receiver: team,
         });
 
         return container;
