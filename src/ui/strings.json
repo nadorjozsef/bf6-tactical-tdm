@@ -46,5 +46,6 @@
     "team1ActivePlayersText": "{}",
     "activePlayersTextCenter": "vs",
     "team2ActivePlayersText": "{}",
-    "score": "{}"
+    "score": "{}",
+    "teamScore": "{}"
 }

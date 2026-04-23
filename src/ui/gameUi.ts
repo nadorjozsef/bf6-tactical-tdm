@@ -83,12 +83,12 @@ export class GameUI {
         return container;
     }
 
-    public leftTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
-        const alphaSignal = SolidUI.createSignal(0);
+    public teamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>, variantName: 'leftVariant' | 'rightVariant'): UIContainer {
+        const [alphaSignal, setAlphaSignal] = SolidUI.createSignal(0);
         SolidUI.createEffect(() => {
             scoreSignal();
             const intervalId = Timers.setInterval(() => {
-                alphaSignal[1]((prev) => {
+                setAlphaSignal((prev) => {
                     if (prev < 1) {
                         prev += 0.1;
                     } else {
@@ -97,13 +97,24 @@ export class GameUI {
                     }
                     return prev;
                 })
-            }, 100, true);
-
+            }, 50, true);
         });
-        const container = SolidUI.h(UIContainer, {
+        const leftVariant = {
             position: { x: -233, y: 54 },
+            darkColor: UI.COLORS.BF_BLUE_DARK,
+            brightColor: UI.COLORS.BF_BLUE_BRIGHT,
+        }
+        const rightVariant = {
+            position: { x: 233, y: 54 },
+            darkColor: UI.COLORS.BF_RED_DARK,
+            brightColor: UI.COLORS.BF_RED_BRIGHT,
+        }
+        const variant = variantName === 'leftVariant' ? leftVariant : rightVariant;
+
+        const container = SolidUI.h(UIContainer, {
+            position: variant.position,
             size: { width: 84, height: 34 },
-            bgColor: UI.COLORS.BF_BLUE_DARK,
+            bgColor: variant.darkColor,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
@@ -113,47 +124,23 @@ export class GameUI {
         });
 
         SolidUI.h(UIContainer, {
-            position: { x: -233, y: 54 },
+            position: { x: 0, y: 0 },
             size: { width: 84, height: 34 },
-            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgColor: variant.brightColor,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: alphaSignal[0],
+            bgAlpha: alphaSignal,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter,
-            receiver: team,
-        });
-
-        SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.team1Score, scoreSignal()),
-            textSize: 34,
-            width: 84,
-            textColor: UI.COLORS.BF_BLUE_BRIGHT,
+            anchor: mod.UIAnchor.TopLeft,
             parent: container,
             receiver: team,
         });
 
-        return container;
-    }
-
-    public rightTeamScoreUI(team: mod.Team, scoreSignal: SolidUI.Accessor<number>): UIContainer {
-        const container = SolidUI.h(UIContainer, {
-            position: { x: 233, y: 54 },
-            size: { width: 84, height: 34 },
-            bgColor: UI.COLORS.BF_RED_DARK,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter,
-            receiver: team,
-        });
-
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.team2Score, scoreSignal()),
+            message: () => mod.Message(mod.stringkeys.teamScore, scoreSignal()),
             textSize: 34,
             width: 84,
-            textColor: UI.COLORS.BF_RED_BRIGHT,
+            textColor: variant.brightColor,
             parent: container,
             receiver: team,
         });

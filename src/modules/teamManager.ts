@@ -43,9 +43,9 @@ export class TeamManager {
     }
 
     private showScores() {
-        this._gameUI.leftTeamScoreUI(mod.GetTeam(1), this.getTeam(1).scoreSignal[0]);
-        this._gameUI.rightTeamScoreUI(mod.GetTeam(1), this.getTeam(2).scoreSignal[0]);
-        this._gameUI.leftTeamScoreUI(mod.GetTeam(2), this.getTeam(2).scoreSignal[0]);
-        this._gameUI.rightTeamScoreUI(mod.GetTeam(2), this.getTeam(1).scoreSignal[0]);
+        this._gameUI.teamScoreUI(mod.GetTeam(1), this.getTeam(1).scoreSignal[0], 'leftVariant');
+        this._gameUI.teamScoreUI(mod.GetTeam(1), this.getTeam(2).scoreSignal[0], 'rightVariant');
+        this._gameUI.teamScoreUI(mod.GetTeam(2), this.getTeam(2).scoreSignal[0], 'leftVariant');
+        this._gameUI.teamScoreUI(mod.GetTeam(2), this.getTeam(1).scoreSignal[0], 'rightVariant');
     }
 }
