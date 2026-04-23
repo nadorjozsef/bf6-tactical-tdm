@@ -12,7 +12,7 @@ export class Reinforcements {
 
     private constructor(gameUI: GameUI) {
         Events.OnGameModeStarted.subscribe(this.onGameModeStarted.bind(this));
-        gameUI.displayNextReinforcements(this._nextReinforcementsTimeSignal[0]);
+        gameUI.nextReinforcements(this._nextReinforcementsTimeSignal[0]);
     }
 
     static getInstance(gameUI: GameUI): Reinforcements {

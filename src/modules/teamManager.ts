@@ -39,15 +39,15 @@ export class TeamManager {
     }
 
     private showActivePlayers() {
-        this._gameUI.activePlayersUI(mod.GetTeam(1), this.getTeam(1).activePlayersSignal[0], this.getTeam(2).activePlayersSignal[0]);
-        this._gameUI.activePlayersUI(mod.GetTeam(2), this.getTeam(2).activePlayersSignal[0], this.getTeam(1).activePlayersSignal[0]);
+        this._gameUI.activePlayers(mod.GetTeam(1), this.getTeam(1).activePlayersSignal[0], this.getTeam(2).activePlayersSignal[0]);
+        this._gameUI.activePlayers(mod.GetTeam(2), this.getTeam(2).activePlayersSignal[0], this.getTeam(1).activePlayersSignal[0]);
     }
 
     private showScores() {
-        this._gameUI.teamScoreUI(mod.GetTeam(1), this.getTeam(1).scoreSignal[0], 'leftVariant');
-        this._gameUI.teamScoreUI(mod.GetTeam(1), this.getTeam(2).scoreSignal[0], 'rightVariant');
-        this._gameUI.teamScoreUI(mod.GetTeam(2), this.getTeam(2).scoreSignal[0], 'leftVariant');
-        this._gameUI.teamScoreUI(mod.GetTeam(2), this.getTeam(1).scoreSignal[0], 'rightVariant');
+        this._gameUI.teamScore(mod.GetTeam(1), this.getTeam(1).scoreSignal[0], 'leftVariant');
+        this._gameUI.teamScore(mod.GetTeam(1), this.getTeam(2).scoreSignal[0], 'rightVariant');
+        this._gameUI.teamScore(mod.GetTeam(2), this.getTeam(2).scoreSignal[0], 'leftVariant');
+        this._gameUI.teamScore(mod.GetTeam(2), this.getTeam(1).scoreSignal[0], 'rightVariant');
     }
 
     private showTeamScoreBar() {

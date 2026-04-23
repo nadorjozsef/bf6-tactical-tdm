@@ -39,13 +39,11 @@
         "team2": "Team 2"
     },
     "lifeCount": "Life: {}",
-    "team1Score": "{}",
-    "team2Score": "{}",
     "reinforcementsLabel": "Reinforcements",
     "reinforcementsTime": "{}",
-    "team1ActivePlayersText": "{}",
+    "leftActivePlayersText": "{}",
     "activePlayersTextCenter": "vs",
-    "team2ActivePlayersText": "{}",
+    "rightActivePlayersText": "{}",
     "score": "{}",
     "teamScore": "{}"
 }

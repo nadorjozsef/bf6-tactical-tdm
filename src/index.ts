@@ -12,6 +12,6 @@ const scoreboard = Scoreboard.getInstance(playerManager);
 const teamManager = TeamManager.getInstance(gameUI);
 const globalManager = Reinforcements.getInstance(gameUI);
 
-gameUI.capturePointAIcon();
+gameUI.capturePointA();
 
 GameMode.GetInstance(playerManager, teamManager, globalManager, scoreboard);

@@ -3,7 +3,7 @@ import type { GameUI } from '../ui/gameUi.ts';
 
 export class Player {
     constructor(private _modPlayer: mod.Player, gameUI: GameUI) {
-        gameUI.playerLivesUI(_modPlayer, this._livesSignal[0]);
+        gameUI.playerLives(_modPlayer, this._livesSignal[0]);
     }
     private _livesSignal = SolidUI.createSignal(1);
 
