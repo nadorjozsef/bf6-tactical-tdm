@@ -99,7 +99,7 @@ export class GameMode {
     private handleReinforcementsArrived(): void {
         for (const player of this._playerManager.getAllPlayers()) {
             player.lives = player.lives + 1;
-            this._scoreboard.update(player.modPlayer);
+            this._scoreboard.update(player.modObject);
         }
         mod.EnableAllPlayerDeploy(true);
         Sounds.Sound2D.play(this.SOUND_LOOP_2D, {

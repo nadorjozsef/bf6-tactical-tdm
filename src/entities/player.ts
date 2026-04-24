@@ -11,7 +11,7 @@ export class Player {
         return mod.GetObjId(this._modPlayer);
     }
 
-    get modPlayer() {
+    get modObject() {
         return this._modPlayer;
     }
 

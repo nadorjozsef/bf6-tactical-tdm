@@ -1,20 +1,18 @@
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
 export class Team {
-    private _id;
     private _scoreSignal = SolidUI.createSignal(0);
     private _activePlayersSignal = SolidUI.createSignal(0);
 
-    constructor(modTeam: mod.Team) {
-        this._id = mod.GetObjId(modTeam);
+    constructor(private _modTeam: mod.Team) {
     }
 
     get id(): number {
-        return this._id;
+        return mod.GetObjId(this._modTeam);
     }
 
-    get activePlayersSignal() {
-        return this._activePlayersSignal;
+    get modObject() {
+        return this._modTeam;
     }
 
     get scoreSignal() {
@@ -26,6 +24,10 @@ export class Team {
     }
     set score(value: number) {
         this._scoreSignal[1](value);
+    }
+
+    get activePlayersSignal() {
+        return this._activePlayersSignal;
     }
 
     get activePlayers(): number {

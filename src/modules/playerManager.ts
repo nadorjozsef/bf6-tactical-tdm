@@ -19,8 +19,7 @@ export class PlayerManager {
     }
 
     private handlePlayerJoinGame(modPlayer: mod.Player): void {
-        const player = new Player(modPlayer, this._gameUI);
-        this._players.push(player);
+        this._players.push(new Player(modPlayer, this._gameUI));
     }
 
     private handlePlayerLeaveGame(playerId: number): void {

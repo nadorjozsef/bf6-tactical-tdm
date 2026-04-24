@@ -8,8 +8,6 @@ export class TeamManager {
 
     private constructor(private _gameUI: GameUI) {
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
-        this._teams.push(new Team(mod.GetTeam(1)));
-        this._teams.push(new Team(mod.GetTeam(2)));
     }
 
     static getInstance(gameUI: GameUI): TeamManager {
@@ -33,6 +31,8 @@ export class TeamManager {
     }
 
     private handleGameModeStarted(): void {
+        this._teams.push(new Team(mod.GetTeam(1)));
+        this._teams.push(new Team(mod.GetTeam(2)));
         this.showActivePlayers();
         this.showScores();
         this.showTeamScoreBar();
