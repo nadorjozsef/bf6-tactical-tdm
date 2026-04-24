@@ -5,16 +5,16 @@ export class CapturePoint {
 
     constructor(private _modCapturePoint: mod.CapturePoint) { }
 
-    get id() {
+    get id(): number {
         return mod.GetObjId(this._modCapturePoint);
     }
 
-    get modObject() {
+    get modObject(): mod.CapturePoint {
         return this._modCapturePoint;
     }
 
-    get ownerTeamIdSignal() {
-        return this._ownerTeamId;
+    get ownerTeamIdAccessor(): SolidUI.Accessor<number> {
+        return this._ownerTeamId[0];
     }
 
     get ownerTeamId(): number {

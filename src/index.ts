@@ -5,12 +5,13 @@ import { TeamManager } from './modules/teamManager.ts';
 import { Reinforcements } from "./modules/reinforcements.ts";
 import { Scoreboard } from "./modules/scoreboard.ts";
 import { CapturePointManager } from "./modules/capturePointManager.ts";
+import { GameUIManager } from "./ui/gameUIManager.ts";
 
 const gameUI = GameUI.getInstance();
-const playerManager = PlayerManager.getInstance(gameUI);
+const playerManager = PlayerManager.getInstance();
 const scoreboard = Scoreboard.getInstance(playerManager);
-const teamManager = TeamManager.getInstance(gameUI);
-const globalManager = Reinforcements.getInstance(gameUI);
-const capturePointManager = CapturePointManager.getInstance(gameUI);
-
-GameMode.GetInstance(playerManager, teamManager, capturePointManager, globalManager, scoreboard);
+const teamManager = TeamManager.getInstance();
+const reinforcements = Reinforcements.getInstance(gameUI);
+const capturePointManager = CapturePointManager.getInstance();
+GameUIManager.getInstance(gameUI, teamManager, playerManager, capturePointManager);
+GameMode.GetInstance(playerManager, teamManager, capturePointManager, reinforcements, scoreboard);

@@ -1,18 +1,17 @@
 import { Events } from "bf6-portal-utils/events/index.ts";
 import { Team } from "../entities/team.ts";
-import { GameUI } from "../ui/gameUi.ts";
 
 export class TeamManager {
     private static _instance: TeamManager | undefined;
     private _teams: Team[] = [];
 
-    private constructor(private _gameUI: GameUI) {
+    private constructor() {
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
     }
 
-    static getInstance(gameUI: GameUI): TeamManager {
+    static getInstance(): TeamManager {
         if (!TeamManager._instance) {
-            TeamManager._instance = new TeamManager(gameUI);
+            TeamManager._instance = new TeamManager();
         }
         return TeamManager._instance;
     }
@@ -33,27 +32,5 @@ export class TeamManager {
     private handleGameModeStarted(): void {
         this._teams.push(new Team(mod.GetTeam(1)));
         this._teams.push(new Team(mod.GetTeam(2)));
-        this.showActivePlayers();
-        this.showScores();
-        this.showTeamScoreBar();
-    }
-
-    private showActivePlayers() {
-        this._gameUI.activePlayers(mod.GetTeam(1), this.getTeam(1).activePlayersSignal[0], this.getTeam(2).activePlayersSignal[0]);
-        this._gameUI.activePlayers(mod.GetTeam(2), this.getTeam(2).activePlayersSignal[0], this.getTeam(1).activePlayersSignal[0]);
-    }
-
-    private showScores() {
-        this._gameUI.teamScore(mod.GetTeam(1), this.getTeam(1).scoreSignal[0], 'leftVariant');
-        this._gameUI.teamScore(mod.GetTeam(1), this.getTeam(2).scoreSignal[0], 'rightVariant');
-        this._gameUI.teamScore(mod.GetTeam(2), this.getTeam(2).scoreSignal[0], 'leftVariant');
-        this._gameUI.teamScore(mod.GetTeam(2), this.getTeam(1).scoreSignal[0], 'rightVariant');
-    }
-
-    private showTeamScoreBar() {
-        this._gameUI.teamScoreBar(mod.GetTeam(1), this.getTeam(1).scoreSignal[0], 'leftVariant', 50);
-        this._gameUI.teamScoreBar(mod.GetTeam(1), this.getTeam(2).scoreSignal[0], 'rightVariant', 50);
-        this._gameUI.teamScoreBar(mod.GetTeam(2), this.getTeam(2).scoreSignal[0], 'leftVariant', 50);
-        this._gameUI.teamScoreBar(mod.GetTeam(2), this.getTeam(1).scoreSignal[0], 'rightVariant', 50);
     }
 }

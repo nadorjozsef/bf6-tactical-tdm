@@ -1,22 +1,25 @@
 import { Events } from "bf6-portal-utils/events/index.ts";
-import { GameUI } from "../ui/gameUi.ts";
 import { CapturePoint } from "../entities/capturePoint.ts";
 import { convertArray } from "../helpers/index.ts";
 
 export class CapturePointManager {
     private static _instance: CapturePointManager | undefined;
-    public _capturePoints: CapturePoint[] = [];
+    private _capturePoints: CapturePoint[] = [];
 
-    private constructor(private _gameUI: GameUI) {
+    private constructor() {
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
         Events.OnCapturePointCaptured.subscribe(this.handleCapturePointCaptured.bind(this));
     }
 
-    static getInstance(gameUI: GameUI): CapturePointManager {
+    static getInstance(): CapturePointManager {
         if (!CapturePointManager._instance) {
-            CapturePointManager._instance = new CapturePointManager(gameUI);
+            CapturePointManager._instance = new CapturePointManager();
         }
         return CapturePointManager._instance;
+    }
+
+    public getCapturePoints(): CapturePoint[] {
+        return this._capturePoints;
     }
 
     public getCapturePoint(modCapturePoint: mod.CapturePoint): CapturePoint;
@@ -47,7 +50,6 @@ export class CapturePointManager {
             mod.SetCapturePointNeutralizationTime(capturePoint.modObject, 5);
             mod.SetMaxCaptureMultiplier(capturePoint.modObject, 1);
         }
-        this._gameUI.capturePoints(this._capturePoints);
     }
 
     private handleCapturePointCaptured(modCapturePoint: mod.CapturePoint): void {

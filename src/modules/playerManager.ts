@@ -1,25 +1,27 @@
 import { Player } from '../entities/player.ts';
-import type { GameUI } from '../ui/gameUi.ts';
 import { Events } from 'bf6-portal-utils/events/index.ts';
 
 export class PlayerManager {
     private static _instance: PlayerManager | undefined;
     private _players: Player[] = [];
+    private _onPlayerJoinGame?: (player: Player) => void;
 
-    private constructor(private _gameUI: GameUI) {
+    private constructor() {
         Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
         Events.OnPlayerLeaveGame.subscribe(this.handlePlayerLeaveGame.bind(this));
     }
 
-    static getInstance(gameUi: GameUI): PlayerManager {
+    static getInstance(): PlayerManager {
         if (!PlayerManager._instance) {
-            PlayerManager._instance = new PlayerManager(gameUi);
+            PlayerManager._instance = new PlayerManager();
         }
         return PlayerManager._instance;
     }
 
     private handlePlayerJoinGame(modPlayer: mod.Player): void {
-        this._players.push(new Player(modPlayer, this._gameUI));
+        const player = new Player(modPlayer);
+        this._players.push(player);
+        this._onPlayerJoinGame?.(player);
     }
 
     private handlePlayerLeaveGame(playerId: number): void {
@@ -27,6 +29,10 @@ export class PlayerManager {
         if (index !== -1) {
             this._players.splice(index, 1);
         }
+    }
+
+    public subscribePlayerJoinGame(callback: (player: Player) => void): void {
+        this._onPlayerJoinGame = callback;
     }
 
     public getPlayer(modPlayer: mod.Player): Player;

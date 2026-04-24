@@ -4,19 +4,18 @@ export class Team {
     private _scoreSignal = SolidUI.createSignal(0);
     private _activePlayersSignal = SolidUI.createSignal(0);
 
-    constructor(private _modTeam: mod.Team) {
-    }
+    constructor(private _modTeam: mod.Team) { }
 
     get id(): number {
         return mod.GetObjId(this._modTeam);
     }
 
-    get modObject() {
+    get modObject(): mod.Team {
         return this._modTeam;
     }
 
-    get scoreSignal() {
-        return this._scoreSignal;
+    get scoreAccessor(): SolidUI.Accessor<number> {
+        return this._scoreSignal[0];
     }
 
     get score(): number {
@@ -26,8 +25,8 @@ export class Team {
         this._scoreSignal[1](value);
     }
 
-    get activePlayersSignal() {
-        return this._activePlayersSignal;
+    get activePlayersAccessor(): SolidUI.Accessor<number> {
+        return this._activePlayersSignal[0];
     }
 
     get activePlayers(): number {
