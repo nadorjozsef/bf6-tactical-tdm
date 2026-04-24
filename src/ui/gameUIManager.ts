@@ -5,18 +5,19 @@ import { PlayerManager } from "../modules/playerManager";
 import type { Player } from "../entities/player";
 import type { Team } from "../entities/team";
 import type { CapturePointManager } from "../modules/capturePointManager";
+import type { Reinforcements } from "../modules/reinforcements";
 
 export class GameUIManager {
     private static _instance: GameUIManager | undefined;
 
-    private constructor(private _gameUI: GameUI, private _teamManager: TeamManager, playerManager: PlayerManager, private _capturePointManager: CapturePointManager) {
-        playerManager.subscribePlayerJoinGame(this.handlePlayerJoinGame.bind(this));
+    private constructor(private _gameUI: GameUI, private _playerManager: PlayerManager, private _teamManager: TeamManager, private _capturePointManager: CapturePointManager, private _reinforcements: Reinforcements) {
+        this._playerManager.subscribePlayerJoinGame(this.handlePlayerJoinGame.bind(this));
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
     }
 
-    static getInstance(gameUI: GameUI, teamManager: TeamManager, playerManager: PlayerManager, capturePointManager: CapturePointManager): GameUIManager {
+    static getInstance(gameUI: GameUI, playerManager: PlayerManager, teamManager: TeamManager, capturePointManager: CapturePointManager, reinforcements: Reinforcements): GameUIManager {
         if (!GameUIManager._instance) {
-            GameUIManager._instance = new GameUIManager(gameUI, teamManager, playerManager, capturePointManager);
+            GameUIManager._instance = new GameUIManager(gameUI, playerManager, teamManager, capturePointManager, reinforcements);
         }
         return GameUIManager._instance;
     }
@@ -28,6 +29,7 @@ export class GameUIManager {
         this.showTeamScores(team1, team2);
         this.showTeamScoreBars(team1, team2);
         this.showCapturePoints();
+        this.showNextReinforcementsTime();
     }
 
     // todo implement handlePlayerLeaveGame?
@@ -57,6 +59,10 @@ export class GameUIManager {
         this._gameUI.teamScoreBar(team1?.modObject, team2?.scoreAccessor, 'rightVariant', 50);
         this._gameUI.teamScoreBar(team2?.modObject, team2?.scoreAccessor, 'leftVariant', 50);
         this._gameUI.teamScoreBar(team2?.modObject, team1?.scoreAccessor, 'rightVariant', 50);
+    }
+
+    private showNextReinforcementsTime(): void {
+        this._gameUI.nextReinforcements(this._reinforcements.nextReinforcementsTimeAccessor);
     }
 
     private showCapturePoints(): void {

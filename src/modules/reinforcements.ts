@@ -1,23 +1,21 @@
 import { Clocks } from "bf6-portal-utils/clocks/index.ts";
 import { Events } from "bf6-portal-utils/events/index.ts";
-import type { GameUI } from "../ui/gameUI.ts";
 import { SolidUI } from "bf6-portal-utils/solid-ui/index.ts";
 
 export class Reinforcements {
-    private static _instance: Reinforcements | undefined;
-    private _nextReinforcementsTimeSignal = SolidUI.createSignal(0);
     private DEFAULT_REINFORCEMENTS_TIME = 120;
     private TIME_TO_REDUCE = 10;
+    private static _instance: Reinforcements | undefined;
+    private _nextReinforcementsTimeSignal = SolidUI.createSignal(0);
     private _onReinforcementsArrived?: () => void;
 
-    private constructor(gameUI: GameUI) {
+    private constructor() {
         Events.OnGameModeStarted.subscribe(this.onGameModeStarted.bind(this));
-        gameUI.nextReinforcements(this._nextReinforcementsTimeSignal[0]);
     }
 
-    static getInstance(gameUI: GameUI): Reinforcements {
+    static getInstance(): Reinforcements {
         if (!Reinforcements._instance) {
-            Reinforcements._instance = new Reinforcements(gameUI);
+            Reinforcements._instance = new Reinforcements();
         }
         return Reinforcements._instance;
     }
@@ -42,17 +40,21 @@ export class Reinforcements {
         onComplete: () => { this.onComplete() },
     });
 
-    private onSecond(seconds: number) {
+    private onSecond(seconds: number): void {
         this.nextReinforcementsTime = seconds;
         if (seconds === 10) {
             mod.PlayMusic(mod.MusicEvents.Core_PhaseEnded);
         }
     }
 
-    private onComplete() {
+    private onComplete(): void {
         this._onReinforcementsArrived?.();
         this.nextReinforcementsClock.reset().start();
         mod.PlayMusic(mod.MusicEvents.Core_PhaseBegin);
+    }
+
+    get nextReinforcementsTimeAccessor(): SolidUI.Accessor<number> {
+        return this._nextReinforcementsTimeSignal[0];
     }
 
     get nextReinforcementsTime(): number {
