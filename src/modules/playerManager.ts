@@ -56,10 +56,10 @@ export class PlayerManager {
     }
 
     private getPlayerById(playerId: number): Player {
-        const player = this._players.find((players) => players.id === playerId);
-        if (!player) {
-            throw 'Player has not found!';
+        const found = this._players.find((players) => players.id === playerId);
+        if (!found) {
+            throw 'Player has not found for ID: ' + playerId;
         }
-        return player;
+        return found;
     }
 }

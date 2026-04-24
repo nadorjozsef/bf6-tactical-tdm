@@ -9,16 +9,16 @@ export class Team {
         this._id = mod.GetObjId(modTeam);
     }
 
+    get id(): number {
+        return this._id;
+    }
+
     get activePlayersSignal() {
         return this._activePlayersSignal;
     }
 
     get scoreSignal() {
         return this._scoreSignal;
-    }
-
-    get id(): number {
-        return this._id;
     }
 
     get score(): number {

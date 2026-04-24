@@ -3,6 +3,7 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import { Timers } from 'bf6-portal-utils/timers';
+import type { CapturePoint } from '../entities/capturePoint';
 
 export class GameUI {
     private static _instance: GameUI | undefined;
@@ -16,11 +17,47 @@ export class GameUI {
         return GameUI._instance;
     }
 
-    public capturePointA(): UIContainer {
+    public capturePoints(capturePoints: CapturePoint[]): void {
+        const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        const boxPositions = (() => {
+            const boxWidth = 32;
+            const gap = 20;
+            const step = boxWidth + gap;
+            const totalWidth = capturePoints.length * step;
+            const start = -totalWidth / 2 + step / 2;
+            const positions: number[] = [];
+            for (let i = 0; i < capturePoints.length; i++) {
+                positions.push(start + i * step);
+            }
+            return positions;
+        })();
+        for (let i = 0; i < capturePoints.length; i++) {
+            this.capturePoint(capturePoints[i].ownerTeamIdSignal[0], labels[i], boxPositions[i]);
+        }
+    }
+
+    private capturePoint(ownerTeamId: SolidUI.Accessor<number>, label: string, xPosition: number): UIContainer {
+        const brightColor = UI.COLORS.BF_GREY_1;
+        const darkColor = UI.COLORS.BF_GREY_4;
+        const [brightColorSignal, setBrightColorSignal] = SolidUI.createSignal(brightColor);
+        const [darkColorSignal, setDarkColorSignal] = SolidUI.createSignal(darkColor);
+        SolidUI.createEffect(() => {
+            if (ownerTeamId() === 0) {
+                setBrightColorSignal(brightColor);
+                setDarkColorSignal(darkColor);
+            } else if (ownerTeamId() === 1) {
+                setBrightColorSignal(UI.COLORS.BF_BLUE_BRIGHT);
+                setDarkColorSignal(UI.COLORS.BF_BLUE_DARK);
+            } else if (ownerTeamId() === 2) {
+                setBrightColorSignal(UI.COLORS.BF_RED_BRIGHT);
+                setDarkColorSignal(UI.COLORS.BF_RED_DARK);
+            }
+        });
         const container = SolidUI.h(UIContainer, {
-            position: { x: 0, y: 95 },
+            x: xPosition,
+            y: 95,
             size: { width: 32, height: 32 },
-            bgColor: UI.COLORS.BF_BLUE_DARK,
+            bgColor: darkColorSignal,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
@@ -29,51 +66,55 @@ export class GameUI {
         });
 
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.score, 'A'),
+            message: () => mod.Message(mod.stringkeys.score, label),
             textSize: 24,
             width: 32,
-            textColor: UI.COLORS.BF_BLUE_BRIGHT,
+            textColor: brightColorSignal,
             parent: container,
         });
+        // top border
         SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 2 },
-            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgColor: brightColorSignal,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
+            bgAlpha: 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.TopCenter,
             parent: container
         });
+        // bottom border
         SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 2 },
-            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgColor: brightColorSignal,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
+            bgAlpha: 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.BottomCenter,
             parent: container
         });
+        // left border
         SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 2, height: 32 },
-            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgColor: brightColorSignal,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
+            bgAlpha: 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.CenterLeft,
             parent: container
         });
+        // right border
         SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 2, height: 32 },
-            bgColor: UI.COLORS.BF_BLUE_BRIGHT,
+            bgColor: brightColorSignal,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
+            bgAlpha: 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.CenterRight,

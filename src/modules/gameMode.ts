@@ -7,7 +7,7 @@ import { Scoreboard } from './scoreboard.ts';
 import type { Player } from '../entities/player.ts';
 import type { Team } from '../entities/team.ts';
 import { convertArray } from '../helpers/index.ts';
-import { debug } from '../debugTool/adminDebugTool.ts';
+import { CapturePointManager } from './capturePointManager.ts';
 
 export class GameMode {
     private static _instance: GameMode | undefined;
@@ -19,6 +19,7 @@ export class GameMode {
     private constructor(
         private _playerManager: PlayerManager,
         private _teamManager: TeamManager,
+        private _capturePointManager: CapturePointManager,
         private _reinforcements: Reinforcements,
         private _scoreboard: Scoreboard
     ) {
@@ -33,11 +34,12 @@ export class GameMode {
     static GetInstance(
         playerManager: PlayerManager,
         teamManager: TeamManager,
+        capturePointManager: CapturePointManager,
         reinforcements: Reinforcements,
         scoreboard: Scoreboard
     ): GameMode {
         if (!GameMode._instance) {
-            GameMode._instance = new GameMode(playerManager, teamManager, reinforcements, scoreboard);
+            GameMode._instance = new GameMode(playerManager, teamManager, capturePointManager, reinforcements, scoreboard);
         }
         return GameMode._instance;
     }
@@ -45,7 +47,7 @@ export class GameMode {
     private handleCapturePointCaptured(capturePoint: mod.CapturePoint): void {
         const modTeam = mod.GetCurrentOwnerTeam(capturePoint);
         this._teamManager.getTeam(modTeam).score += 10;
-        const modPlayersArray = mod.GetPlayersOnPoint(capturePoint)
+        const modPlayersArray = mod.GetPlayersOnPoint(capturePoint);
         const modPlayers = convertArray<mod.Player>(modPlayersArray);
         for (const player of this._playerManager.getPlayers(modPlayers)) {
             player.score += 300;
@@ -55,10 +57,6 @@ export class GameMode {
     private handleGameModeStarted(): void {
         mod.SetGameModeTimeLimit(this.GAME_MODE_TIMELIMIT);
         mod.LoadMusic(mod.MusicPackages.Core);
-        mod.EnableGameModeObjective(mod.GetCapturePoint(100), true);
-        mod.SetCapturePointCapturingTime(mod.GetCapturePoint(100), 10);
-        mod.SetCapturePointNeutralizationTime(mod.GetCapturePoint(100), 10);
-        mod.SetMaxCaptureMultiplier(mod.GetCapturePoint(100), 1);
     }
 
     private handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void {
