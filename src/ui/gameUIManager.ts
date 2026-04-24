@@ -1,5 +1,5 @@
 import { Events } from "bf6-portal-utils/events";
-import type { GameUI } from "./gameUi";
+import type { GameUI } from "./gameUI2";
 import type { TeamManager } from "../modules/teamManager";
 import { PlayerManager } from "../modules/playerManager";
 import type { Player } from "../entities/player";

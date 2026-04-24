@@ -1,5 +1,5 @@
 import { GameMode } from "./modules/gameMode.ts";
-import { GameUI } from './ui/gameUi.ts';
+import { GameUI } from './ui/gameUI2.ts';
 import { PlayerManager } from './modules/playerManager.ts';
 import { TeamManager } from './modules/teamManager.ts';
 import { Reinforcements } from "./modules/reinforcements.ts";

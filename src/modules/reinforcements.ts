@@ -1,6 +1,6 @@
 import { Clocks } from "bf6-portal-utils/clocks/index.ts";
 import { Events } from "bf6-portal-utils/events/index.ts";
-import type { GameUI } from "../ui/gameUi.ts";
+import type { GameUI } from "../ui/gameUI2.ts";
 import { SolidUI } from "bf6-portal-utils/solid-ui/index.ts";
 
 export class Reinforcements {
