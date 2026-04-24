@@ -3,7 +3,6 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import { Timers } from 'bf6-portal-utils/timers';
-import { debug } from '../debugTool/adminDebugTool';
 
 export class GameUI {
     private static _instance: GameUI | undefined;
@@ -18,7 +17,6 @@ export class GameUI {
     }
 
     public capturePoint(ownerTeamIdAccessor: SolidUI.Accessor<number>, label: string, xPosition: number): UIContainer {
-        debug?.dynamicLog("Creating capture point UI for " + label);
         const brightColor = UI.COLORS.BF_GREY_1;
         const darkColor = UI.COLORS.BF_GREY_4;
         const [brightColorSignal, setBrightColorSignal] = SolidUI.createSignal(brightColor);
