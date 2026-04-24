@@ -16,7 +16,32 @@ export class GameUI {
         return GameUI._instance;
     }
 
-    public capturePoint(ownerTeamIdAccessor: SolidUI.Accessor<number>, label: string, xPosition: number): UIContainer {
+    public capturePoints(ownerTeamIdAccessors: SolidUI.Accessor<number>[]): void {
+        const numberOfCapturePoints = ownerTeamIdAccessors.length;
+        const boxWidth = 32;
+        const gap = 20;
+        const step = boxWidth + gap;
+        const totalWidth = numberOfCapturePoints * step;
+        const start = -totalWidth / 2 + step / 2;
+        const capturePointXPositions: number[] = [];
+        for (let i = 0; i < numberOfCapturePoints; i++) {
+            capturePointXPositions.push(start + i * step);
+        }
+        const letters = [
+            mod.stringkeys.capturePointA,
+            mod.stringkeys.capturePointB,
+            mod.stringkeys.capturePointC,
+            mod.stringkeys.capturePointD,
+            mod.stringkeys.capturePointE,
+            mod.stringkeys.capturePointF,
+            mod.stringkeys.capturePointG
+        ];
+        for (let i = 0; i < numberOfCapturePoints; i++) {
+            this.capturePoint(ownerTeamIdAccessors[i], letters[i], capturePointXPositions[i]);
+        }
+    }
+
+    private capturePoint(ownerTeamIdAccessor: SolidUI.Accessor<number>, letter: string, xPosition: number): UIContainer {
         const brightColor = UI.COLORS.BF_GREY_1;
         const darkColor = UI.COLORS.BF_GREY_4;
         const [brightColorSignal, setBrightColorSignal] = SolidUI.createSignal(brightColor);
@@ -48,7 +73,7 @@ export class GameUI {
         });
 
         SolidUI.h(UIText, {
-            message: mod.Message(mod.stringkeys.score, label),
+            message: mod.Message(letter),
             textSize: 24,
             width: 32,
             textColor: brightColorSignal,

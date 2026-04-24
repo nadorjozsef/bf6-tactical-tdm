@@ -44,6 +44,12 @@
     "leftActivePlayersText": "{}",
     "activePlayersTextCenter": "vs",
     "rightActivePlayersText": "{}",
-    "score": "{}",
-    "teamScore": "{}"
+    "teamScore": "{}",
+    "capturePointA": "A",
+    "capturePointB": "B",
+    "capturePointC": "C",
+    "capturePointD": "D",
+    "capturePointE": "E",
+    "capturePointF": "F",
+    "capturePointG": "G"
 }

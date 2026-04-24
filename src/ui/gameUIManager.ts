@@ -67,18 +67,6 @@ export class GameUIManager {
 
     private showCapturePoints(): void {
         const capturePoints = this._capturePointManager.getCapturePoints();
-        const boxWidth = 32;
-        const gap = 20;
-        const step = boxWidth + gap;
-        const totalWidth = capturePoints.length * step;
-        const start = -totalWidth / 2 + step / 2;
-        const boxPositions: number[] = [];
-        for (let i = 0; i < capturePoints.length; i++) {
-            boxPositions.push(start + i * step);
-        }
-        const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-        for (let i = 0; i < capturePoints.length; i++) {
-            this._gameUI.capturePoint(capturePoints[i].ownerTeamIdAccessor, labels[i], boxPositions[i]);
-        }
+        this._gameUI.capturePoints(capturePoints.map(cp => cp.ownerTeamIdAccessor));
     }
 }
