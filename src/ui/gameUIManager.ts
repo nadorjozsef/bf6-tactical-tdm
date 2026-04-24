@@ -6,18 +6,19 @@ import type { Player } from "../entities/player";
 import type { Team } from "../entities/team";
 import type { CapturePointManager } from "../modules/capturePointManager";
 import type { Reinforcements } from "../modules/reinforcements";
+import type { GameMode } from "../modules/gameMode";
 
 export class GameUIManager {
     private static _instance: GameUIManager | undefined;
 
-    private constructor(private _gameUI: GameUI, private _playerManager: PlayerManager, private _teamManager: TeamManager, private _capturePointManager: CapturePointManager, private _reinforcements: Reinforcements) {
+    private constructor(private _gameUI: GameUI, private _playerManager: PlayerManager, private _teamManager: TeamManager, private _capturePointManager: CapturePointManager, private _reinforcements: Reinforcements, private _gameMode: GameMode) {
         this._playerManager.subscribePlayerJoinGame(this.handlePlayerJoinGame.bind(this));
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
     }
 
-    static getInstance(gameUI: GameUI, playerManager: PlayerManager, teamManager: TeamManager, capturePointManager: CapturePointManager, reinforcements: Reinforcements): GameUIManager {
+    static getInstance(gameUI: GameUI, playerManager: PlayerManager, teamManager: TeamManager, capturePointManager: CapturePointManager, reinforcements: Reinforcements, gameMode: GameMode): GameUIManager {
         if (!GameUIManager._instance) {
-            GameUIManager._instance = new GameUIManager(gameUI, playerManager, teamManager, capturePointManager, reinforcements);
+            GameUIManager._instance = new GameUIManager(gameUI, playerManager, teamManager, capturePointManager, reinforcements, gameMode);
         }
         return GameUIManager._instance;
     }
@@ -42,23 +43,23 @@ export class GameUIManager {
     }
 
     private showTeamScores(team1: Team, team2: Team): void {
-        this._gameUI.teamScore(team1?.modObject, team1?.scoreAccessor, 'leftVariant');
-        this._gameUI.teamScore(team1?.modObject, team2?.scoreAccessor, 'rightVariant');
-        this._gameUI.teamScore(team2?.modObject, team2?.scoreAccessor, 'leftVariant');
-        this._gameUI.teamScore(team2?.modObject, team1?.scoreAccessor, 'rightVariant');
+        this._gameUI.teamScore(team1.modObject, team1.scoreAccessor, 'leftVariant');
+        this._gameUI.teamScore(team1.modObject, team2.scoreAccessor, 'rightVariant');
+        this._gameUI.teamScore(team2.modObject, team2.scoreAccessor, 'leftVariant');
+        this._gameUI.teamScore(team2.modObject, team1.scoreAccessor, 'rightVariant');
     }
 
     private showActivePlayers(team1: Team, team2: Team): void {
-        this._gameUI.activePlayers(team1?.modObject, team1?.activePlayersAccessor, team2?.activePlayersAccessor);
-        this._gameUI.activePlayers(team2?.modObject, team2?.activePlayersAccessor, team1?.activePlayersAccessor);
+        this._gameUI.activePlayers(team1.modObject, team1.activePlayersAccessor, team2.activePlayersAccessor);
+        this._gameUI.activePlayers(team2.modObject, team2.activePlayersAccessor, team1.activePlayersAccessor);
     }
 
     private showTeamScoreBars(team1: Team, team2: Team): void {
-        // todo get max score from game mode settings instead of hardcoding it
-        this._gameUI.teamScoreBar(team1?.modObject, team1?.scoreAccessor, 'leftVariant', 50);
-        this._gameUI.teamScoreBar(team1?.modObject, team2?.scoreAccessor, 'rightVariant', 50);
-        this._gameUI.teamScoreBar(team2?.modObject, team2?.scoreAccessor, 'leftVariant', 50);
-        this._gameUI.teamScoreBar(team2?.modObject, team1?.scoreAccessor, 'rightVariant', 50);
+        const maxScore = this._gameMode.GAME_MODE_TARGET_SCORE;
+        this._gameUI.teamScoreBar(team1.modObject, team1.scoreAccessor, 'leftVariant', maxScore);
+        this._gameUI.teamScoreBar(team1.modObject, team2.scoreAccessor, 'rightVariant', maxScore);
+        this._gameUI.teamScoreBar(team2.modObject, team2.scoreAccessor, 'leftVariant', maxScore);
+        this._gameUI.teamScoreBar(team2.modObject, team1.scoreAccessor, 'rightVariant', maxScore);
     }
 
     private showNextReinforcementsTime(): void {

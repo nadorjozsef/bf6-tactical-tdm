@@ -12,7 +12,7 @@ import { CapturePointManager } from './capturePointManager.ts';
 export class GameMode {
     private static _instance: GameMode | undefined;
 
-    private GAME_MODE_TARGET_SCORE = 50;
+    public GAME_MODE_TARGET_SCORE = 50;
     private GAME_MODE_TIMELIMIT = 600;
     private SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 

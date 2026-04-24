@@ -13,5 +13,5 @@ const scoreboard = Scoreboard.getInstance(playerManager);
 const teamManager = TeamManager.getInstance();
 const reinforcements = Reinforcements.getInstance();
 const capturePointManager = CapturePointManager.getInstance();
-GameUIManager.getInstance(gameUI, playerManager, teamManager, capturePointManager, reinforcements);
-GameMode.GetInstance(playerManager, teamManager, capturePointManager, reinforcements, scoreboard);
+const gameModeManager = GameMode.GetInstance(playerManager, teamManager, capturePointManager, reinforcements, scoreboard);
+GameUIManager.getInstance(gameUI, playerManager, teamManager, capturePointManager, reinforcements, gameModeManager);
