@@ -51,5 +51,6 @@
     "capturePointD": "D",
     "capturePointE": "E",
     "capturePointF": "F",
-    "capturePointG": "G"
+    "capturePointG": "G",
+    "circle": "\u25cf"
 }

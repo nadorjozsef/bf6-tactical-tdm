@@ -42,93 +42,174 @@ export class GameUI {
     }
 
     private capturePoint(ownerTeamIdAccessor: SolidUI.Accessor<number>, letter: string, xPosition: number): UIContainer {
-        const brightColor = UI.COLORS.BF_GREY_1;
-        const darkColor = UI.COLORS.BF_GREY_4;
-        const [brightColorSignal, setBrightColorSignal] = SolidUI.createSignal(brightColor);
-        const [darkColorSignal, setDarkColorSignal] = SolidUI.createSignal(darkColor);
-
-        SolidUI.createEffect(() => {
-            if (ownerTeamIdAccessor() === 0) {
-                setBrightColorSignal(brightColor);
-                setDarkColorSignal(darkColor);
-            } else if (ownerTeamIdAccessor() === 1) {
-                setBrightColorSignal(UI.COLORS.BF_BLUE_BRIGHT);
-                setDarkColorSignal(UI.COLORS.BF_BLUE_DARK);
-            } else if (ownerTeamIdAccessor() === 2) {
-                setBrightColorSignal(UI.COLORS.BF_RED_BRIGHT);
-                setDarkColorSignal(UI.COLORS.BF_RED_DARK);
-            }
-        });
-
-        const container = SolidUI.h(UIContainer, {
+        const mainContainer = SolidUI.h(UIContainer, {
             x: xPosition,
             y: 95,
             size: { width: 32, height: 32 },
-            bgColor: darkColorSignal,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
+            bgFill: mod.UIBgFill.None,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.TopCenter
         });
 
-        SolidUI.h(UIText, {
-            message: mod.Message(letter),
-            textSize: 24,
-            width: 32,
-            textColor: brightColorSignal,
-            parent: container,
-        });
-        // top border
-        SolidUI.h(UIContainer, {
-            position: { x: 0, y: 0 },
-            size: { width: 32, height: 2 },
-            bgColor: brightColorSignal,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter,
-            parent: container
-        });
-        // bottom border
-        SolidUI.h(UIContainer, {
-            position: { x: 0, y: 0 },
-            size: { width: 32, height: 2 },
-            bgColor: brightColorSignal,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.BottomCenter,
-            parent: container
-        });
-        // left border
-        SolidUI.h(UIContainer, {
-            position: { x: 0, y: 0 },
-            size: { width: 2, height: 32 },
-            bgColor: brightColorSignal,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.CenterLeft,
-            parent: container
-        });
-        // right border
-        SolidUI.h(UIContainer, {
-            position: { x: 0, y: 0 },
-            size: { width: 2, height: 32 },
-            bgColor: brightColorSignal,
-            bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
-            visible: true,
-            depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.CenterRight,
-            parent: container
+        const circleCapturePoint = this.blueCapturePoint(mainContainer, letter);
+        const squareCapturePoint = this.grayCapturePoint(mainContainer, letter);
+        const diamondCapturePoint = this.redCapturePoint(mainContainer, letter);
+
+        SolidUI.createEffect(() => {
+            if (ownerTeamIdAccessor() === 0) {
+                circleCapturePoint.hide();
+                diamondCapturePoint.hide();
+                squareCapturePoint.show();
+            } else if (ownerTeamIdAccessor() === 1) {
+                circleCapturePoint.show();
+                diamondCapturePoint.hide();
+                squareCapturePoint.hide();
+            } else if (ownerTeamIdAccessor() === 2) {
+                circleCapturePoint.hide();
+                diamondCapturePoint.show();
+                squareCapturePoint.hide();
+            }
         });
 
-        return container;
+        return squareCapturePoint;
+    }
+
+    private blueCapturePoint(parent: UIContainer, letter: string): UIContainer {
+        const circleContainer = SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 32, height: 32 },
+            bgFill: mod.UIBgFill.None,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.Center,
+            parent: parent
+        });
+        // outer circle
+        SolidUI.h(UIText, {
+            message: mod.Message(mod.stringkeys.circle),
+            textSize: 40,
+            width: 40,
+            textColor: UI.COLORS.BF_BLUE_BRIGHT,
+            textAlpha: 1,
+            anchor: mod.UIAnchor.Center,
+            parent: circleContainer,
+        });
+        // inner circle
+        SolidUI.h(UIText, {
+            message: mod.Message(mod.stringkeys.circle),
+            textSize: 37,
+            width: 37,
+            textColor: UI.COLORS.BF_BLUE_DARK,
+            textAlpha: 0.75,
+            anchor: mod.UIAnchor.Center,
+            parent: circleContainer,
+        });
+        // letter
+        SolidUI.h(UIText, {
+            message: mod.Message(letter),
+            textSize: 22,
+            width: 32,
+            textColor: UI.COLORS.BF_BLUE_BRIGHT,
+            textAlpha: 1,
+            anchor: mod.UIAnchor.Center,
+            parent: circleContainer,
+        });
+        return circleContainer;
+    }
+
+    private redCapturePoint(parent: UIContainer, letter: string): UIContainer {
+        const squareContainer = SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 32, height: 32 },
+            bgFill: mod.UIBgFill.None,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.Center,
+            parent: parent
+        });
+        // outer square
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 32, height: 32 },
+            bgColor: UI.COLORS.BF_RED_BRIGHT,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.Center,
+            parent: squareContainer
+        });
+        // inner square
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 28, height: 28 },
+            bgColor: UI.COLORS.BF_RED_DARK,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 0.75,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.Center,
+            parent: squareContainer
+        });
+        // letter
+        SolidUI.h(UIText, {
+            message: mod.Message(letter),
+            textSize: 22,
+            width: 32,
+            textColor: UI.COLORS.BF_RED_BRIGHT,
+            anchor: mod.UIAnchor.Center,
+            parent: squareContainer,
+        });
+
+        return squareContainer;
+    }
+
+    private grayCapturePoint(parent: UIContainer, letter: string): UIContainer {
+        const squareContainer = SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 32, height: 32 },
+            bgFill: mod.UIBgFill.None,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.Center,
+            parent: parent
+        });
+        // outer square
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 32, height: 32 },
+            bgColor: UI.COLORS.BF_GREY_1,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 1,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.Center,
+            parent: squareContainer
+        });
+        // inner square
+        SolidUI.h(UIContainer, {
+            position: { x: 0, y: 0 },
+            size: { width: 28, height: 28 },
+            bgColor: UI.COLORS.BF_GREY_4,
+            bgFill: mod.UIBgFill.Solid,
+            bgAlpha: 0.75,
+            visible: true,
+            depth: mod.UIDepth.BelowGameUI,
+            anchor: mod.UIAnchor.Center,
+            parent: squareContainer
+        });
+        // letter
+        SolidUI.h(UIText, {
+            message: mod.Message(letter),
+            textSize: 22,
+            width: 32,
+            textColor: UI.COLORS.BF_GREY_1,
+            anchor: mod.UIAnchor.Center,
+            parent: squareContainer,
+        });
+
+        return squareContainer;
     }
 
     public teamScore(team: mod.Team, scoreAccessor: SolidUI.Accessor<number>, variantName: 'leftVariant' | 'rightVariant'): UIContainer {
