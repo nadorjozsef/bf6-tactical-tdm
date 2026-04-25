@@ -68,6 +68,6 @@ export class GameUIManager {
 
     private showCapturePoints(): void {
         const capturePoints = this._capturePointManager.getCapturePoints();
-        this._gameUI.capturePoints(capturePoints.map(cp => cp.ownerTeamIdAccessor));
+        this._gameUI.capturePoints(capturePoints.map(cp => cp.ownerTeamIdAccessor), capturePoints.map(cp => cp.isCapturingAccessor));
     }
 }

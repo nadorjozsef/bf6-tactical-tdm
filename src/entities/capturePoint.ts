@@ -2,6 +2,7 @@ import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
 export class CapturePoint {
     private _ownerTeamId = SolidUI.createSignal(0);
+    private _isCapturing = SolidUI.createSignal(false);
 
     constructor(private _modCapturePoint: mod.CapturePoint) { }
 
@@ -22,5 +23,16 @@ export class CapturePoint {
     }
     set ownerTeamId(value: number) {
         this._ownerTeamId[1](value);
+    }
+
+    get isCapturingAccessor(): SolidUI.Accessor<boolean> {
+        return this._isCapturing[0];
+    }
+
+    get isCapturing(): boolean {
+        return this._isCapturing[0]();
+    }
+    set isCapturing(value: boolean) {
+        this._isCapturing[1](value);
     }
 }

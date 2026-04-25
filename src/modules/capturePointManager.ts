@@ -9,6 +9,8 @@ export class CapturePointManager {
     private constructor() {
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
         Events.OnCapturePointCaptured.subscribe(this.handleCapturePointCaptured.bind(this));
+        Events.OnCapturePointCapturing.subscribe(this.handleCapturePointCapturing.bind(this));
+        Events.OnCapturePointLost.subscribe(this.handleCapturePointLost.bind(this));
     }
 
     static getInstance(): CapturePointManager {
@@ -52,8 +54,20 @@ export class CapturePointManager {
         }
     }
 
+    private handleCapturePointCapturing(modCapturePoint: mod.CapturePoint): void {
+        const capturePoint = this.getCapturePoint(modCapturePoint);
+        capturePoint.isCapturing = true;
+    }
+
     private handleCapturePointCaptured(modCapturePoint: mod.CapturePoint): void {
         const capturePoint = this.getCapturePoint(modCapturePoint);
         capturePoint.ownerTeamId = mod.GetObjId(mod.GetCurrentOwnerTeam(modCapturePoint));
+        capturePoint.isCapturing = false;
+    }
+
+    private handleCapturePointLost(modCapturePoint: mod.CapturePoint): void {
+        const capturePoint = this.getCapturePoint(modCapturePoint);
+        capturePoint.ownerTeamId = 0;
+        capturePoint.isCapturing = false;
     }
 }

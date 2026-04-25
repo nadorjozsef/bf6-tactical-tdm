@@ -3,6 +3,7 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import { Timers } from 'bf6-portal-utils/timers';
+import { debug } from '../debugTool/adminDebugTool';
 
 export class GameUI {
     private static _instance: GameUI | undefined;
@@ -16,7 +17,7 @@ export class GameUI {
         return GameUI._instance;
     }
 
-    public capturePoints(ownerTeamIdAccessors: SolidUI.Accessor<number>[]): void {
+    public capturePoints(ownerTeamIdAccessors: SolidUI.Accessor<number>[], isCapturingAccessors: SolidUI.Accessor<boolean>[]): void {
         const numberOfCapturePoints = ownerTeamIdAccessors.length;
         const boxWidth = 32;
         const gap = 20;
@@ -37,11 +38,32 @@ export class GameUI {
             mod.stringkeys.capturePointG
         ];
         for (let i = 0; i < numberOfCapturePoints; i++) {
-            this.capturePoint(ownerTeamIdAccessors[i], letters[i], capturePointXPositions[i]);
+            this.capturePoint(ownerTeamIdAccessors[i], isCapturingAccessors[i], letters[i], capturePointXPositions[i]);
         }
     }
 
-    private capturePoint(ownerTeamIdAccessor: SolidUI.Accessor<number>, letter: string, xPosition: number): UIContainer {
+    private capturePoint(ownerTeamIdAccessor: SolidUI.Accessor<number>, isCapturingAccessor: SolidUI.Accessor<boolean>, letter: string, xPosition: number): UIContainer {
+        const [alphaSignal, setAlphaSignal] = SolidUI.createSignal(1);
+        let intervalId: number | null = null;
+
+        SolidUI.createEffect(() => {
+            if (isCapturingAccessor() === true && intervalId === null) {
+                let change = 0.1;
+                intervalId = Timers.setInterval(() => {
+                    setAlphaSignal((prev) => {
+                        if (prev <= 0 || prev >= 1) change *= -1;
+                        const roundnewAlpha = Math.round((prev + change) * 100) / 100;
+                        debug?.dynamicLog(roundnewAlpha + '')
+                        return roundnewAlpha;
+                    })
+                }, 50, true);
+            } else {
+                Timers.clearInterval(intervalId);
+                setAlphaSignal(1);
+                intervalId = null;
+            }
+        });
+
         const mainContainer = SolidUI.h(UIContainer, {
             x: xPosition,
             y: 95,
@@ -52,9 +74,9 @@ export class GameUI {
             anchor: mod.UIAnchor.TopCenter
         });
 
-        const circleCapturePoint = this.blueCapturePoint(mainContainer, letter);
-        const squareCapturePoint = this.grayCapturePoint(mainContainer, letter);
-        const diamondCapturePoint = this.redCapturePoint(mainContainer, letter);
+        const circleCapturePoint = this.blueCapturePoint(mainContainer, alphaSignal, letter);
+        const squareCapturePoint = this.grayCapturePoint(mainContainer, alphaSignal, letter);
+        const diamondCapturePoint = this.redCapturePoint(mainContainer, alphaSignal, letter);
 
         SolidUI.createEffect(() => {
             if (ownerTeamIdAccessor() === 0) {
@@ -75,7 +97,7 @@ export class GameUI {
         return squareCapturePoint;
     }
 
-    private blueCapturePoint(parent: UIContainer, letter: string): UIContainer {
+    private blueCapturePoint(parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
         const circleContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -91,7 +113,7 @@ export class GameUI {
             textSize: 40,
             width: 40,
             textColor: UI.COLORS.BF_BLUE_BRIGHT,
-            textAlpha: 1,
+            textAlpha: () => alphaSignalAccessor() * 0.75,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
         });
@@ -101,7 +123,7 @@ export class GameUI {
             textSize: 37,
             width: 37,
             textColor: UI.COLORS.BF_BLUE_DARK,
-            textAlpha: 0.75,
+            textAlpha: () => alphaSignalAccessor() * 0.75,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
         });
@@ -111,14 +133,14 @@ export class GameUI {
             textSize: 22,
             width: 32,
             textColor: UI.COLORS.BF_BLUE_BRIGHT,
-            textAlpha: 1,
+            textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
         });
         return circleContainer;
     }
 
-    private redCapturePoint(parent: UIContainer, letter: string): UIContainer {
+    private redCapturePoint(parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
         const squareContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -134,7 +156,7 @@ export class GameUI {
             size: { width: 32, height: 32 },
             bgColor: UI.COLORS.BF_RED_BRIGHT,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
+            bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
@@ -146,7 +168,7 @@ export class GameUI {
             size: { width: 28, height: 28 },
             bgColor: UI.COLORS.BF_RED_DARK,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
+            bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
@@ -158,6 +180,7 @@ export class GameUI {
             textSize: 22,
             width: 32,
             textColor: UI.COLORS.BF_RED_BRIGHT,
+            textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
         });
@@ -165,7 +188,7 @@ export class GameUI {
         return squareContainer;
     }
 
-    private grayCapturePoint(parent: UIContainer, letter: string): UIContainer {
+    private grayCapturePoint(parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
         const squareContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -181,7 +204,7 @@ export class GameUI {
             size: { width: 32, height: 32 },
             bgColor: UI.COLORS.BF_GREY_1,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 1,
+            bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
@@ -193,7 +216,7 @@ export class GameUI {
             size: { width: 28, height: 28 },
             bgColor: UI.COLORS.BF_GREY_4,
             bgFill: mod.UIBgFill.Solid,
-            bgAlpha: 0.75,
+            bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
@@ -205,6 +228,7 @@ export class GameUI {
             textSize: 22,
             width: 32,
             textColor: UI.COLORS.BF_GREY_1,
+            textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
         });
