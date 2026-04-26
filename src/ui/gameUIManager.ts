@@ -29,7 +29,7 @@ export class GameUIManager {
         this.showActivePlayers(team1, team2);
         this.showTeamScores(team1, team2);
         this.showTeamScoreBars(team1, team2);
-        this.showCapturePoints();
+        this.showCapturePoints(team1, team2);
         this.showNextReinforcementsTime();
     }
 
@@ -43,10 +43,8 @@ export class GameUIManager {
     }
 
     private showTeamScores(team1: Team, team2: Team): void {
-        this._gameUI.teamScore(team1.modObject, team1.scoreAccessor, 'leftVariant');
-        this._gameUI.teamScore(team1.modObject, team2.scoreAccessor, 'rightVariant');
-        this._gameUI.teamScore(team2.modObject, team2.scoreAccessor, 'leftVariant');
-        this._gameUI.teamScore(team2.modObject, team1.scoreAccessor, 'rightVariant');
+        this._gameUI.teamScores(team1.modObject, team1.scoreAccessor, team2.scoreAccessor);
+        this._gameUI.teamScores(team2.modObject, team2.scoreAccessor, team1.scoreAccessor);
     }
 
     private showActivePlayers(team1: Team, team2: Team): void {
@@ -56,18 +54,17 @@ export class GameUIManager {
 
     private showTeamScoreBars(team1: Team, team2: Team): void {
         const maxScore = this._gameMode.GAME_MODE_TARGET_SCORE;
-        this._gameUI.teamScoreBar(team1.modObject, team1.scoreAccessor, 'leftVariant', maxScore);
-        this._gameUI.teamScoreBar(team1.modObject, team2.scoreAccessor, 'rightVariant', maxScore);
-        this._gameUI.teamScoreBar(team2.modObject, team2.scoreAccessor, 'leftVariant', maxScore);
-        this._gameUI.teamScoreBar(team2.modObject, team1.scoreAccessor, 'rightVariant', maxScore);
+        this._gameUI.teamScoreBars(team1.modObject, team1.scoreAccessor, team2.scoreAccessor, maxScore);
+        this._gameUI.teamScoreBars(team2.modObject, team2.scoreAccessor, team1.scoreAccessor, maxScore);
     }
 
     private showNextReinforcementsTime(): void {
         this._gameUI.nextReinforcements(this._reinforcements.nextReinforcementsTimeAccessor);
     }
 
-    private showCapturePoints(): void {
+    private showCapturePoints(team1: Team, team2: Team): void {
         const capturePoints = this._capturePointManager.getCapturePoints();
-        this._gameUI.capturePoints(capturePoints.map(cp => cp.ownerTeamIdAccessor), capturePoints.map(cp => cp.isCapturingAccessor));
+        this._gameUI.capturePoints(team1.modObject, capturePoints.map(cp => cp.ownerTeamIdAccessor), capturePoints.map(cp => cp.isCapturingAccessor));
+        this._gameUI.capturePoints(team2.modObject, capturePoints.map(cp => cp.ownerTeamIdAccessor), capturePoints.map(cp => cp.isCapturingAccessor));
     }
 }

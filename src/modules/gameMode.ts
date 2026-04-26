@@ -108,8 +108,11 @@ export class GameMode {
         });
     }
 
-    private handlePlayerDeployed(): void {
+    private handlePlayerDeployed(modPlayer: mod.Player): void {
         this.updateActivePlayers();
+        // if (mod.IsSoldierClass(modPlayer, mod.SoldierClass.Recon)) {
+        //     mod.SetTeam(modPlayer, mod.GetTeam(2));
+        // }
     }
 
     private handlePlayerUndeploy(modPlayer: mod.Player): void {

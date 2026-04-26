@@ -3,7 +3,20 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import { Timers } from 'bf6-portal-utils/timers';
-import { debug } from '../debugTool/adminDebugTool';
+
+interface TeamScoreProps {
+    x: number;
+    darkColor: mod.Vector;
+    brightColor: mod.Vector;
+}
+
+interface TeamScoreBarProps {
+    x: number;
+    darkColor: mod.Vector;
+    brightColor: mod.Vector;
+    anchor: mod.UIAnchor;
+    maxScore: number;
+}
 
 export class GameUI {
     private static _instance: GameUI | undefined;
@@ -17,7 +30,7 @@ export class GameUI {
         return GameUI._instance;
     }
 
-    public capturePoints(ownerTeamIdAccessors: SolidUI.Accessor<number>[], isCapturingAccessors: SolidUI.Accessor<boolean>[]): void {
+    public capturePoints(modTeam: mod.Team, ownerTeamIdAccessors: SolidUI.Accessor<number>[], isCapturingAccessors: SolidUI.Accessor<boolean>[]): void {
         const numberOfCapturePoints = ownerTeamIdAccessors.length;
         const boxWidth = 32;
         const gap = 20;
@@ -38,11 +51,11 @@ export class GameUI {
             mod.stringkeys.capturePointG
         ];
         for (let i = 0; i < numberOfCapturePoints; i++) {
-            this.capturePoint(ownerTeamIdAccessors[i], isCapturingAccessors[i], letters[i], capturePointXPositions[i]);
+            this.capturePoint(modTeam, ownerTeamIdAccessors[i], isCapturingAccessors[i], letters[i], capturePointXPositions[i]);
         }
     }
 
-    private capturePoint(ownerTeamIdAccessor: SolidUI.Accessor<number>, isCapturingAccessor: SolidUI.Accessor<boolean>, letter: string, xPosition: number): UIContainer {
+    private capturePoint(modTeam: mod.Team, ownerTeamIdAccessor: SolidUI.Accessor<number>, isCapturingAccessor: SolidUI.Accessor<boolean>, letter: string, xPosition: number): UIContainer {
         const [alphaSignal, setAlphaSignal] = SolidUI.createSignal(1);
         let intervalId: number | null = null;
 
@@ -53,7 +66,6 @@ export class GameUI {
                     setAlphaSignal((prev) => {
                         if (prev <= 0 || prev >= 1) change *= -1;
                         const roundnewAlpha = Math.round((prev + change) * 100) / 100;
-                        debug?.dynamicLog(roundnewAlpha + '')
                         return roundnewAlpha;
                     })
                 }, 50, true);
@@ -71,33 +83,44 @@ export class GameUI {
             bgFill: mod.UIBgFill.None,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
-            anchor: mod.UIAnchor.TopCenter
+            anchor: mod.UIAnchor.TopCenter,
+            receiver: modTeam,
         });
 
-        const circleCapturePoint = this.blueCapturePoint(mainContainer, alphaSignal, letter);
-        const squareCapturePoint = this.grayCapturePoint(mainContainer, alphaSignal, letter);
-        const diamondCapturePoint = this.redCapturePoint(mainContainer, alphaSignal, letter);
+        const blueCapturePoint = this.blueCapturePoint(modTeam, mainContainer, alphaSignal, letter);
+        const grayCapturePoint = this.grayCapturePoint(modTeam, mainContainer, alphaSignal, letter);
+        const redCapturePoint = this.redCapturePoint(modTeam, mainContainer, alphaSignal, letter);
 
         SolidUI.createEffect(() => {
             if (ownerTeamIdAccessor() === 0) {
-                circleCapturePoint.hide();
-                diamondCapturePoint.hide();
-                squareCapturePoint.show();
+                blueCapturePoint.hide();
+                redCapturePoint.hide();
+                grayCapturePoint.show();
             } else if (ownerTeamIdAccessor() === 1) {
-                circleCapturePoint.show();
-                diamondCapturePoint.hide();
-                squareCapturePoint.hide();
+                if (mod.GetObjId(modTeam) === 1) {
+                    blueCapturePoint.show();
+                    redCapturePoint.hide();
+                } else if (mod.GetObjId(modTeam) === 2) {
+                    blueCapturePoint.hide();
+                    redCapturePoint.show();
+                }
+                grayCapturePoint.hide();
             } else if (ownerTeamIdAccessor() === 2) {
-                circleCapturePoint.hide();
-                diamondCapturePoint.show();
-                squareCapturePoint.hide();
+                if (mod.GetObjId(modTeam) === 1) {
+                    blueCapturePoint.hide();
+                    redCapturePoint.show();
+                } else if (mod.GetObjId(modTeam) === 2) {
+                    blueCapturePoint.show();
+                    redCapturePoint.hide();
+                }
+                grayCapturePoint.hide();
             }
         });
 
-        return squareCapturePoint;
+        return grayCapturePoint;
     }
 
-    private blueCapturePoint(parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
+    private blueCapturePoint(modTeam: mod.Team, parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
         const circleContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -105,7 +128,8 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
-            parent: parent
+            parent: parent,
+            receiver: modTeam,
         });
         // outer circle
         SolidUI.h(UIText, {
@@ -116,6 +140,7 @@ export class GameUI {
             textAlpha: () => alphaSignalAccessor() * 0.75,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
+            receiver: modTeam,
         });
         // inner circle
         SolidUI.h(UIText, {
@@ -126,6 +151,7 @@ export class GameUI {
             textAlpha: () => alphaSignalAccessor() * 0.75,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
+            receiver: modTeam,
         });
         // letter
         SolidUI.h(UIText, {
@@ -136,11 +162,12 @@ export class GameUI {
             textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
+            receiver: modTeam,
         });
         return circleContainer;
     }
 
-    private redCapturePoint(parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
+    private redCapturePoint(modTeam: mod.Team, parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
         const squareContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -148,7 +175,8 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
-            parent: parent
+            parent: parent,
+            receiver: modTeam
         });
         // outer square
         SolidUI.h(UIContainer, {
@@ -160,7 +188,8 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
-            parent: squareContainer
+            parent: squareContainer,
+            receiver: modTeam,
         });
         // inner square
         SolidUI.h(UIContainer, {
@@ -172,7 +201,8 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
-            parent: squareContainer
+            parent: squareContainer,
+            receiver: modTeam,
         });
         // letter
         SolidUI.h(UIText, {
@@ -183,12 +213,13 @@ export class GameUI {
             textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
+            receiver: modTeam,
         });
 
         return squareContainer;
     }
 
-    private grayCapturePoint(parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
+    private grayCapturePoint(modTeam: mod.Team, parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
         const squareContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -196,7 +227,8 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
-            parent: parent
+            parent: parent,
+            receiver: modTeam,
         });
         // outer square
         SolidUI.h(UIContainer, {
@@ -208,7 +240,8 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
-            parent: squareContainer
+            parent: squareContainer,
+            receiver: modTeam,
         });
         // inner square
         SolidUI.h(UIContainer, {
@@ -220,7 +253,8 @@ export class GameUI {
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
-            parent: squareContainer
+            parent: squareContainer,
+            receiver: modTeam,
         });
         // letter
         SolidUI.h(UIText, {
@@ -231,12 +265,26 @@ export class GameUI {
             textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
+            receiver: modTeam,
         });
 
         return squareContainer;
     }
 
-    public teamScore(team: mod.Team, scoreAccessor: SolidUI.Accessor<number>, variantName: 'leftVariant' | 'rightVariant'): UIContainer {
+    public teamScores(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>): void {
+        this.teamScore(modTeam, teamScoreAccessor, {
+            x: -233,
+            darkColor: UI.COLORS.BF_BLUE_DARK,
+            brightColor: UI.COLORS.BF_BLUE_BRIGHT,
+        });
+        this.teamScore(modTeam, opponentScoreAccessor, {
+            x: 233,
+            darkColor: UI.COLORS.BF_RED_DARK,
+            brightColor: UI.COLORS.BF_RED_BRIGHT,
+        });
+    }
+
+    private teamScore(team: mod.Team, scoreAccessor: SolidUI.Accessor<number>, props: TeamScoreProps): UIContainer {
         const [alphaSignal, setAlphaSignal] = SolidUI.createSignal(0);
 
         SolidUI.createEffect(() => {
@@ -254,23 +302,11 @@ export class GameUI {
             }, 50, true);
         });
 
-        const leftVariant = {
-            x: -233,
-            darkColor: UI.COLORS.BF_BLUE_DARK,
-            brightColor: UI.COLORS.BF_BLUE_BRIGHT,
-        }
-        const rightVariant = {
-            x: 233,
-            darkColor: UI.COLORS.BF_RED_DARK,
-            brightColor: UI.COLORS.BF_RED_BRIGHT,
-        }
-        const variant = variantName === 'leftVariant' ? leftVariant : rightVariant;
-
         const container = SolidUI.h(UIContainer, {
-            x: variant.x,
+            x: props.x,
             y: 54,
             size: { width: 84, height: 34 },
-            bgColor: variant.darkColor,
+            bgColor: props.darkColor,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
@@ -282,7 +318,7 @@ export class GameUI {
         SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 84, height: 34 },
-            bgColor: variant.brightColor,
+            bgColor: props.brightColor,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: alphaSignal,
             visible: true,
@@ -296,7 +332,7 @@ export class GameUI {
             message: () => mod.Message(mod.stringkeys.teamScore, scoreAccessor()),
             textSize: 34,
             width: 84,
-            textColor: variant.brightColor,
+            textColor: props.brightColor,
             parent: container,
             receiver: team,
         });
@@ -304,33 +340,37 @@ export class GameUI {
         return container;
     }
 
-    public teamScoreBar(team: mod.Team, scoreAccessor: SolidUI.Accessor<number>, variantName: 'leftVariant' | 'rightVariant', maxScore: number): UIContainer {
+    public teamScoreBars(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>, maxScore: number): void {
+        this.teamScoreBar(modTeam, teamScoreAccessor, {
+            x: -94,
+            darkColor: UI.COLORS.BF_BLUE_DARK,
+            brightColor: UI.COLORS.BF_BLUE_BRIGHT,
+            anchor: mod.UIAnchor.TopLeft,
+            maxScore,
+        });
+        this.teamScoreBar(modTeam, opponentScoreAccessor, {
+            x: 94,
+            darkColor: UI.COLORS.BF_RED_DARK,
+            brightColor: UI.COLORS.BF_RED_BRIGHT,
+            anchor: mod.UIAnchor.TopRight,
+            maxScore,
+        });
+    }
+
+    private teamScoreBar(team: mod.Team, scoreAccessor: SolidUI.Accessor<number>, props: TeamScoreBarProps): UIContainer {
         const CONTAINER_WIDTH = 178;
         const [widthSignal, setWidthSignal] = SolidUI.createSignal(0);
 
         SolidUI.createEffect(() => {
-            const teamScorePercentige = scoreAccessor() / maxScore * 100;
+            const teamScorePercentige = scoreAccessor() / props.maxScore * 100;
             setWidthSignal(+(teamScorePercentige / 100 * CONTAINER_WIDTH).toFixed(0));
         });
 
-        const leftVariant = {
-            x: -94,
-            darkColor: UI.COLORS.BF_BLUE_DARK,
-            brightColor: UI.COLORS.BF_BLUE_BRIGHT,
-            anchor: mod.UIAnchor.TopLeft
-        }
-        const rightVariant = {
-            x: 94,
-            darkColor: UI.COLORS.BF_RED_DARK,
-            brightColor: UI.COLORS.BF_RED_BRIGHT,
-            anchor: mod.UIAnchor.TopRight
-        }
-        const variant = variantName === 'leftVariant' ? leftVariant : rightVariant;
         const container = SolidUI.h(UIContainer, {
-            x: variant.x,
+            x: props.x,
             y: 64,
             size: { width: CONTAINER_WIDTH, height: 12 },
-            bgColor: variant.darkColor,
+            bgColor: props.darkColor,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
@@ -343,12 +383,12 @@ export class GameUI {
             position: { x: 0, y: 0 },
             width: widthSignal,
             height: 12,
-            bgColor: variant.brightColor,
+            bgColor: props.brightColor,
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
             depth: mod.UIDepth.BelowGameUI,
-            anchor: variant.anchor,
+            anchor: props.anchor,
             parent: container,
             receiver: team,
         });
