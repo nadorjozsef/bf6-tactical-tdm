@@ -1,93 +1,156 @@
-﻿# Tactical TDM
+﻿## Battlefield 6 Portal Generic Template
 
-## What is this?
+This repo is a ready-made template for starting Battlefield 6 Portal development.
 
-`Tactical TDM` is a ready-made template for Battlefield 6 Portal mods. It provides a modular starting point for building custom Portal experiences with gameplay systems, UI wiring, and Battlefield Portal-specific utilities already structured and configured.
+It’s built as a thin, structured layer on top of `bf6-portal-utils`, and gives you a clean, object-oriented structure
+plus a set of core gameplay mechanics out of the box.
 
-This template is designed to help mod creators ship faster by giving them:
+## Benefits
 
-- A clean project layout for Battlefield 6 Portal mod development
-- Working build and deployment scripts using `bf6-portal-bundler`
-- Prebuilt game systems such as teams, score tracking, capture points, player state, and reinforcements
-- A separation between game rules and rendering/UI so logic stays reusable and maintainable
+- **Fully object-oriented**: scales from small prototypes to larger projects without turning into a single-file script.
+- **UI is fully separated from business logic**: the UI layer only consumes reactive accessors/signals and doesn’t need
+  to know where the values come from.
+- **Core gameplay mechanics included**: teams, players, capture points, scoreboard wiring.
+- **Easy to extend and maintain**: clear responsibilities, event-driven managers, minimal coupling.
 
-## Underlying utilities
+## Architecture
 
-This project depends on `bf6-portal-utils` as its core helper library. That package provides Battlefiend Portal-safe abstractions for:
+The code is split into three main concerns:
 
-- event handling (`Events`)
-- UI creation and SolidUI reactivity (`UI`, `SolidUI`)
-- timers (`Timers`)
-- game object and team utilities
-- type-safe Portal mod typing and accessors
+- **Entities** (`src/entities/*`): domain objects with state.
+- **Modules** (`src/modules/*`): game systems that own rules, orchestration, and event subscriptions.
+- **UI** (`src/ui/*`): presentation-only layer that renders state from accessors.
 
-Using `bf6-portal-utils` helps keep this template consistent with Portal best practices and makes the code easier to extend.
+### Entities
 
-## Components
+Entities are small object wrappers around `mod.*` objects, plus local state.
 
-### `GameMode`
+- `Player` (`src/entities/player.ts`)
+    - Wraps `mod.Player` and stores per-player state.
+    - Use it to keep stats or reactive values you want to show on the scoreboard/UI.
 
-The `GameMode` component contains the core rules and state for the mod. It is intentionally independent from UI and presentation logic, which means:
+- `Team` (`src/entities/team.ts`)
+    - Wraps `mod.Team` and stores per-team state.
+    - Useful for team-level values like score, tickets, or other mode-specific counters.
 
-- game rules can be tested or reused separately
-- it does not require any UI module imports to function
-- UI is only added by the manager layer
+- `CapturePoint` (`src/entities/capturePoint.ts`)
+    - Wraps `mod.CapturePoint` and stores capture point state.
+    - Designed for objective-based modes where the UI needs to reflect ownership/capture progress.
 
-### `GameUI`
+### Modules
 
-`GameUI` is the pure presentation layer for the mod. Its responsibility is to render Portal UI elements using the accessors and data provided by other modules. Key principles:
+Modules are event-driven “systems”. They subscribe to Portal events (via `bf6-portal-utils/events`) and update entity
+state.
 
-- no direct dependency on game rules
-- no direct dependency on other logic modules
-- only consumes data and accessors
-- handles layout, colors, and reactive updates
+- `PlayerManager` (`src/modules/playerManager.ts`)
+    - Tracks players and exposes lookup helpers.
+    - Central place to create/cleanup per-player state when players join/leave.
 
-### `GameUIManager`
+- `TeamManager` (`src/modules/teamManager.ts`)
+    - Tracks teams and exposes lookup helpers.
+    - Keeps team state in one place so rules and UI wiring can stay simple.
 
-`GameUIManager` is the glue between game state and the UI. It listens for game events, fetches team/player state, and instructs `GameUI` to build or refresh displays. This layer keeps the UI renderer separate from the game logic and ensures the UI is initialized only when the game mode starts.
+- `CapturePointManager` (`src/modules/capturePointManager.ts`)
+    - Tracks capture points and updates their state from events.
+    - Good spot to configure capture-point settings and translate events into entity updates.
 
-### `PlayerManager`
+- `Scoreboard` (`src/modules/scoreboard.ts`)
+    - Configures and updates the scoreboard.
+    - Helps keep scoreboard logic out of your game mode rules.
 
-`PlayerManager` tracks player lifecycle, join events, and per-player state such as lives or equipment. It is responsible for:
+- `GameMode` (`src/modules/gameMode.ts`)
+    - Central rules + orchestration layer for the game mode.
+    - This is where you typically connect events, update entities, and decide win conditions.
 
-- subscribing to player join/leave/game events
-- maintaining valid player registries
-- exposing player accessors for use by UI and gameplay systems
+### UI
 
-### `TeamManager`
+UI is split into two layers, and it’s designed to be independent from gameplay/business logic: UI elements only need
+accessors/signals, so you can refactor rules without rewriting UI rendering. This also makes the UI layer reusable
+across game modes, because it isn’t hard-wired to your game logic.
 
-`TeamManager` holds team-related state and accessors, including:
+- `GameUI` (`src/ui/gameUI.ts`)
+    - Stateless UI builder that renders values from accessors.
+    - It should not contain any game rules—only layout and presentation.
 
-- team scores
-- active player counts
-- team-owned capture points
-- division of team-specific UI receivers
+- `GameUIManager` (`src/ui/gameUIManager.ts`)
+    - Wires **game state → UI** (connects entity/module accessors to `GameUI`).
+    - If you add a new accessor, this is usually the only place you need to hook it up.
 
-This module centralizes team logic so the rest of the game can use a single source of truth.
+## Example: display an entity property on the UI
 
-### `CapturePointManager`
+Use these steps whenever you want a gameplay value to appear on the UI and stay in sync.
 
-`CapturePointManager` handles control-point state and ownership logic. It provides:
+### 1) Add an entity property + UI accessor
 
-- capture point owners
-- capture progress and active capturing state
-- accessors for UI rendering
+Keep your “source of truth” on an entity, exposed as a normal property. If you want to display that property on the UI,
+also expose an **accessor** (a bindable read function) so the UI can react to updates.
 
-### `Scoreboard`
+TypeScript example (entity):
 
-The scoreboard system centralizes score and team progress display. It is responsible for:
+```ts
+import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 
-- collecting team score accessors
-- exposing team score bars and UI values
-- keeping score rendering independent from core game rules
+export class Team {
+    private _scoreSignal = SolidUI.createSignal(0);
 
-## Project structure
+    // normal property used by gameplay code
+    get score(): number {
+        return this._scoreSignal[0]();
+    }
+    set score(value: number) {
+        this._scoreSignal[1](value);
+    }
 
-- `src/` — TypeScript source files for the mod
-- `scripts/` — helper scripts for init, build, deploy, and thumbnail export
-- `spatials/` — spatial definitions used by the experience
-- `dist/` — generated output from the build process
+    // accessor used by the UI (only needed if you want to render it)
+    get scoreAccessor(): SolidUI.Accessor<number> {
+        return this._scoreSignal[0];
+    }
+}
+```
 
-## Notes
+### 2) Create a text element in `GameUI`
 
-This template is built to keep gameplay and UI concerns separate, with a strong emphasis on clean architecture and reuse. `GameMode` defines the rules, while `GameUI` renders the state, and the manager layer connects them.
+Add (or reuse) a `GameUI` method that creates a `UIText` and sets its `message` from the accessor.
+
+TypeScript example (UI method):
+
+```ts
+import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
+import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
+
+export class GameUI {
+    public teamScore(team: mod.Team, scoreAccessor: SolidUI.Accessor<number>): void {
+        SolidUI.h(UIText, {
+            // ...position/size/etc...
+            message: () => mod.Message(scoreAccessor()),
+            receiver: team,
+        });
+    }
+}
+```
+
+### 3) Wire the accessor into the UI using `GameUIManager`
+
+`GameUIManager` is the bridge. It grabs the accessor from your entity and passes it into the `GameUI` method. After
+that, whenever your gameplay code updates the entity property, the UI stays synced because it’s reading the accessor.
+
+```ts
+import type { GameUI } from './gameUI.ts';
+import type { Team } from '../entities/team.ts';
+
+export class GameUIManager {
+    constructor(private _gameUI: GameUI) {}
+
+    public showTeamScore(team: Team): void {
+        this._gameUI.teamScore(team.modObject, team.scoreAccessor);
+    }
+}
+```
+
+Now, any time gameplay updates the entity property:
+
+```ts
+team.score = team.score + 1;
+```
+
+…`scoreAccessor()` returns the new value and the UI text updates automatically.
