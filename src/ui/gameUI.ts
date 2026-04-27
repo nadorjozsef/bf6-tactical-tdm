@@ -21,7 +21,7 @@ interface TeamScoreBarProps {
 export class GameUI {
     private static _instance: GameUI | undefined;
 
-    private constructor() { }
+    private constructor() {}
 
     static getInstance(): GameUI {
         if (!GameUI._instance) {
@@ -30,7 +30,11 @@ export class GameUI {
         return GameUI._instance;
     }
 
-    public capturePoints(modTeam: mod.Team, ownerTeamIdAccessors: SolidUI.Accessor<number>[], isCapturingAccessors: SolidUI.Accessor<boolean>[]): void {
+    public capturePoints(
+        modTeam: mod.Team,
+        ownerTeamIdAccessors: SolidUI.Accessor<number>[],
+        isCapturingAccessors: SolidUI.Accessor<boolean>[]
+    ): void {
         const numberOfCapturePoints = ownerTeamIdAccessors.length;
         const boxWidth = 32;
         const gap = 20;
@@ -42,33 +46,49 @@ export class GameUI {
             capturePointXPositions.push(start + i * step);
         }
         const letters = [
-            mod.stringkeys.capturePointA,
-            mod.stringkeys.capturePointB,
-            mod.stringkeys.capturePointC,
-            mod.stringkeys.capturePointD,
-            mod.stringkeys.capturePointE,
-            mod.stringkeys.capturePointF,
-            mod.stringkeys.capturePointG
+            mod.stringkeys.gameUI.capturePointA,
+            mod.stringkeys.gameUI.capturePointB,
+            mod.stringkeys.gameUI.capturePointC,
+            mod.stringkeys.gameUI.capturePointD,
+            mod.stringkeys.gameUI.capturePointE,
+            mod.stringkeys.gameUI.capturePointF,
+            mod.stringkeys.gameUI.capturePointG,
         ];
         for (let i = 0; i < numberOfCapturePoints; i++) {
-            this.capturePoint(modTeam, ownerTeamIdAccessors[i], isCapturingAccessors[i], letters[i], capturePointXPositions[i]);
+            this.capturePoint(
+                modTeam,
+                ownerTeamIdAccessors[i],
+                isCapturingAccessors[i],
+                letters[i],
+                capturePointXPositions[i]
+            );
         }
     }
 
-    private capturePoint(modTeam: mod.Team, ownerTeamIdAccessor: SolidUI.Accessor<number>, isCapturingAccessor: SolidUI.Accessor<boolean>, letter: string, xPosition: number): UIContainer {
+    private capturePoint(
+        modTeam: mod.Team,
+        ownerTeamIdAccessor: SolidUI.Accessor<number>,
+        isCapturingAccessor: SolidUI.Accessor<boolean>,
+        letter: string,
+        xPosition: number
+    ): UIContainer {
         const [alphaSignal, setAlphaSignal] = SolidUI.createSignal(1);
         let intervalId: number | null = null;
 
         SolidUI.createEffect(() => {
             if (isCapturingAccessor() === true && intervalId === null) {
                 let change = 0.1;
-                intervalId = Timers.setInterval(() => {
-                    setAlphaSignal((prev) => {
-                        if (prev <= 0 || prev >= 1) change *= -1;
-                        const roundnewAlpha = Math.round((prev + change) * 100) / 100;
-                        return roundnewAlpha;
-                    })
-                }, 50, true);
+                intervalId = Timers.setInterval(
+                    () => {
+                        setAlphaSignal((prev) => {
+                            if (prev <= 0 || prev >= 1) change *= -1;
+                            const roundnewAlpha = Math.round((prev + change) * 100) / 100;
+                            return roundnewAlpha;
+                        });
+                    },
+                    50,
+                    true
+                );
             } else {
                 Timers.clearInterval(intervalId);
                 setAlphaSignal(1);
@@ -120,7 +140,12 @@ export class GameUI {
         return grayCapturePoint;
     }
 
-    private blueCapturePoint(modTeam: mod.Team, parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
+    private blueCapturePoint(
+        modTeam: mod.Team,
+        parent: UIContainer,
+        alphaSignalAccessor: SolidUI.Accessor<number>,
+        letter: string
+    ): UIContainer {
         const circleContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -133,7 +158,7 @@ export class GameUI {
         });
         // outer circle
         SolidUI.h(UIText, {
-            message: mod.Message(mod.stringkeys.circle),
+            message: mod.Message(mod.stringkeys.gameUI.circle),
             textSize: 40,
             width: 40,
             textColor: UI.COLORS.BF_BLUE_BRIGHT,
@@ -167,7 +192,12 @@ export class GameUI {
         return circleContainer;
     }
 
-    private redCapturePoint(modTeam: mod.Team, parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
+    private redCapturePoint(
+        modTeam: mod.Team,
+        parent: UIContainer,
+        alphaSignalAccessor: SolidUI.Accessor<number>,
+        letter: string
+    ): UIContainer {
         const squareContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -176,7 +206,7 @@ export class GameUI {
             depth: mod.UIDepth.BelowGameUI,
             anchor: mod.UIAnchor.Center,
             parent: parent,
-            receiver: modTeam
+            receiver: modTeam,
         });
         // outer square
         SolidUI.h(UIContainer, {
@@ -219,7 +249,12 @@ export class GameUI {
         return squareContainer;
     }
 
-    private grayCapturePoint(modTeam: mod.Team, parent: UIContainer, alphaSignalAccessor: SolidUI.Accessor<number>, letter: string): UIContainer {
+    private grayCapturePoint(
+        modTeam: mod.Team,
+        parent: UIContainer,
+        alphaSignalAccessor: SolidUI.Accessor<number>,
+        letter: string
+    ): UIContainer {
         const squareContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
@@ -271,7 +306,11 @@ export class GameUI {
         return squareContainer;
     }
 
-    public teamScores(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>): void {
+    public teamScores(
+        modTeam: mod.Team,
+        teamScoreAccessor: SolidUI.Accessor<number>,
+        opponentScoreAccessor: SolidUI.Accessor<number>
+    ): void {
         this.teamScore(modTeam, teamScoreAccessor, {
             x: -233,
             darkColor: UI.COLORS.BF_BLUE_DARK,
@@ -289,17 +328,21 @@ export class GameUI {
 
         SolidUI.createEffect(() => {
             scoreAccessor();
-            const intervalId = Timers.setInterval(() => {
-                setAlphaSignal((prev) => {
-                    if (prev < 1) {
-                        prev += 0.1;
-                    } else {
-                        prev = 0;
-                        Timers.clearInterval(intervalId);
-                    }
-                    return prev;
-                })
-            }, 50, true);
+            const intervalId = Timers.setInterval(
+                () => {
+                    setAlphaSignal((prev) => {
+                        if (prev < 1) {
+                            prev += 0.1;
+                        } else {
+                            prev = 0;
+                            Timers.clearInterval(intervalId);
+                        }
+                        return prev;
+                    });
+                },
+                50,
+                true
+            );
         });
 
         const container = SolidUI.h(UIContainer, {
@@ -329,7 +372,7 @@ export class GameUI {
         });
 
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.teamScore, scoreAccessor()),
+            message: () => mod.Message(mod.stringkeys.gameUI.teamScore, scoreAccessor()),
             textSize: 34,
             width: 84,
             textColor: props.brightColor,
@@ -340,7 +383,12 @@ export class GameUI {
         return container;
     }
 
-    public teamScoreBars(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>, maxScore: number): void {
+    public teamScoreBars(
+        modTeam: mod.Team,
+        teamScoreAccessor: SolidUI.Accessor<number>,
+        opponentScoreAccessor: SolidUI.Accessor<number>,
+        maxScore: number
+    ): void {
         this.teamScoreBar(modTeam, teamScoreAccessor, {
             x: -94,
             darkColor: UI.COLORS.BF_BLUE_DARK,
@@ -357,13 +405,17 @@ export class GameUI {
         });
     }
 
-    private teamScoreBar(team: mod.Team, scoreAccessor: SolidUI.Accessor<number>, props: TeamScoreBarProps): UIContainer {
+    private teamScoreBar(
+        team: mod.Team,
+        scoreAccessor: SolidUI.Accessor<number>,
+        props: TeamScoreBarProps
+    ): UIContainer {
         const CONTAINER_WIDTH = 178;
         const [widthSignal, setWidthSignal] = SolidUI.createSignal(0);
 
         SolidUI.createEffect(() => {
-            const teamScorePercentige = scoreAccessor() / props.maxScore * 100;
-            setWidthSignal(+(teamScorePercentige / 100 * CONTAINER_WIDTH).toFixed(0));
+            const teamScorePercentige = (scoreAccessor() / props.maxScore) * 100;
+            setWidthSignal(+((teamScorePercentige / 100) * CONTAINER_WIDTH).toFixed(0));
         });
 
         const container = SolidUI.h(UIContainer, {
@@ -396,7 +448,11 @@ export class GameUI {
         return container;
     }
 
-    public activePlayers(team: mod.Team, leftActivePlayerAccessor: SolidUI.Accessor<number>, rightActivePlayerAccessor: SolidUI.Accessor<number>): UIContainer {
+    public activePlayers(
+        team: mod.Team,
+        leftActivePlayerAccessor: SolidUI.Accessor<number>,
+        rightActivePlayerAccessor: SolidUI.Accessor<number>
+    ): UIContainer {
         const playerCountContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 130 },
             size: { width: 150, height: 50 },
@@ -416,7 +472,7 @@ export class GameUI {
             bgAlpha: 1,
             visible: true,
             bgFill: mod.UIBgFill.None,
-            message: () => mod.Message(mod.stringkeys.rightActivePlayersText, leftActivePlayerAccessor()),
+            message: () => mod.Message(mod.stringkeys.gameUI.rightActivePlayersText, leftActivePlayerAccessor()),
             textColor: mod.CreateVector(0.4392, 0.9216, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -432,7 +488,7 @@ export class GameUI {
             bgAlpha: 1,
             visible: true,
             bgFill: mod.UIBgFill.None,
-            message: () => mod.Message(mod.stringkeys.leftActivePlayersText, rightActivePlayerAccessor()),
+            message: () => mod.Message(mod.stringkeys.gameUI.leftActivePlayersText, rightActivePlayerAccessor()),
             textColor: mod.CreateVector(1, 0.5137, 0.3804),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -449,7 +505,7 @@ export class GameUI {
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             bgAlpha: 1,
             bgFill: mod.UIBgFill.None,
-            message: mod.Message(mod.stringkeys.activePlayersTextCenter),
+            message: mod.Message(mod.stringkeys.gameUI.activePlayersTextCenter),
             textColor: mod.CreateVector(1, 1, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -472,7 +528,7 @@ export class GameUI {
             receiver: player,
         });
         SolidUI.h(UIText, {
-            message: () => mod.Message(mod.stringkeys.lifeCount, livesAccessor()),
+            message: () => mod.Message(mod.stringkeys.gameUI.lifeCount, livesAccessor()),
             textSize: 20,
             width: 80,
             visible: true,
@@ -499,7 +555,7 @@ export class GameUI {
             size: { width: 100, height: 34 },
             anchor: mod.UIAnchor.BottomCenter,
             visible: true,
-            message: () => mod.Message(mod.stringkeys.reinforcementsTime, nextReinforcementsTimeAccessor()),
+            message: () => mod.Message(mod.stringkeys.gameUI.reinforcementsTime, nextReinforcementsTimeAccessor()),
             textColor: mod.CreateVector(1, 1, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -511,7 +567,7 @@ export class GameUI {
             size: { width: 100, height: 20 },
             anchor: mod.UIAnchor.TopCenter,
             visible: true,
-            message: mod.Message(mod.stringkeys.reinforcementsLabel),
+            message: mod.Message(mod.stringkeys.gameUI.reinforcementsLabel),
             textColor: UI.COLORS.WHITE,
             textSize: 12,
             textAnchor: mod.UIAnchor.Center,
