@@ -3,6 +3,7 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import { Timers } from 'bf6-portal-utils/timers';
+import { debug } from '../debugTool/adminDebugTool';
 
 interface TeamScoreProps {
     x: number;
@@ -21,7 +22,7 @@ interface TeamScoreBarProps {
 export class GameUI {
     private static _instance: GameUI | undefined;
 
-    private constructor() {}
+    private constructor() { }
 
     static getInstance(): GameUI {
         if (!GameUI._instance) {
@@ -71,7 +72,7 @@ export class GameUI {
         isCapturingAccessor: SolidUI.Accessor<boolean>,
         letter: string,
         xPosition: number
-    ): UIContainer {
+    ): void {
         const [alphaSignal, setAlphaSignal] = SolidUI.createSignal(1);
         let intervalId: number | null = null;
 
@@ -102,7 +103,7 @@ export class GameUI {
             size: { width: 32, height: 32 },
             bgFill: mod.UIBgFill.None,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.TopCenter,
             receiver: modTeam,
         });
@@ -112,46 +113,44 @@ export class GameUI {
         const redCapturePoint = this.redCapturePoint(modTeam, mainContainer, alphaSignal, letter);
 
         SolidUI.createEffect(() => {
-            if (ownerTeamIdAccessor() === 0) {
+            if (ownerTeamIdAccessor() == 0) {
                 blueCapturePoint.hide();
                 redCapturePoint.hide();
                 grayCapturePoint.show();
-            } else if (ownerTeamIdAccessor() === 1) {
+            } else if (ownerTeamIdAccessor() == 1) {
                 if (mod.GetObjId(modTeam) === 1) {
                     blueCapturePoint.show();
                     redCapturePoint.hide();
-                } else if (mod.GetObjId(modTeam) === 2) {
+                } else if (mod.GetObjId(modTeam) == 2) {
                     blueCapturePoint.hide();
                     redCapturePoint.show();
                 }
                 grayCapturePoint.hide();
-            } else if (ownerTeamIdAccessor() === 2) {
-                if (mod.GetObjId(modTeam) === 1) {
+            } else if (ownerTeamIdAccessor() == 2) {
+                if (mod.GetObjId(modTeam) == 1) {
                     blueCapturePoint.hide();
                     redCapturePoint.show();
-                } else if (mod.GetObjId(modTeam) === 2) {
+                } else if (mod.GetObjId(modTeam) == 2) {
                     blueCapturePoint.show();
                     redCapturePoint.hide();
                 }
                 grayCapturePoint.hide();
             }
         });
-
-        return grayCapturePoint;
     }
 
     private blueCapturePoint(
         modTeam: mod.Team,
         parent: UIContainer,
         alphaSignalAccessor: SolidUI.Accessor<number>,
-        letter: string
+        letterStringKey: string
     ): UIContainer {
         const circleContainer = SolidUI.h(UIContainer, {
             position: { x: 0, y: 0 },
             size: { width: 32, height: 32 },
             bgFill: mod.UIBgFill.None,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: parent,
             receiver: modTeam,
@@ -169,7 +168,7 @@ export class GameUI {
         });
         // inner circle
         SolidUI.h(UIText, {
-            message: mod.Message(mod.stringkeys.circle),
+            message: mod.Message(mod.stringkeys.gameUI.circle),
             textSize: 37,
             width: 37,
             textColor: UI.COLORS.BF_BLUE_DARK,
@@ -180,7 +179,7 @@ export class GameUI {
         });
         // letter
         SolidUI.h(UIText, {
-            message: mod.Message(letter),
+            message: mod.Message(letterStringKey),
             textSize: 22,
             width: 32,
             textColor: UI.COLORS.BF_BLUE_BRIGHT,
@@ -203,7 +202,7 @@ export class GameUI {
             size: { width: 32, height: 32 },
             bgFill: mod.UIBgFill.None,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: parent,
             receiver: modTeam,
@@ -216,7 +215,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
             receiver: modTeam,
@@ -229,7 +228,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
             receiver: modTeam,
@@ -260,7 +259,7 @@ export class GameUI {
             size: { width: 32, height: 32 },
             bgFill: mod.UIBgFill.None,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: parent,
             receiver: modTeam,
@@ -273,7 +272,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
             receiver: modTeam,
@@ -286,7 +285,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: () => alphaSignalAccessor() * 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
             receiver: modTeam,
@@ -353,7 +352,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.TopCenter,
             receiver: team,
         });
@@ -365,7 +364,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: alphaSignal,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.TopLeft,
             parent: container,
             receiver: team,
@@ -426,7 +425,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.TopCenter,
             receiver: team,
         });
@@ -439,7 +438,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: props.anchor,
             parent: container,
             receiver: team,
@@ -523,7 +522,7 @@ export class GameUI {
             bgFill: mod.UIBgFill.Solid,
             bgAlpha: 0.75,
             visible: true,
-            depth: mod.UIDepth.BelowGameUI,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.TopCenter,
             receiver: player,
         });

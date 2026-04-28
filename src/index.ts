@@ -7,6 +7,7 @@ import { Scoreboard } from './modules/scoreboard.ts';
 import { CapturePointManager } from './modules/capturePointManager.ts';
 import { GameUIManager } from './ui/gameUIManager.ts';
 import { ScoreboardManager } from './modules/scoreboardManager.ts';
+import { debug } from './debugTool/adminDebugTool.ts';
 
 const gameUI = GameUI.getInstance();
 const playerManager = PlayerManager.getInstance();
