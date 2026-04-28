@@ -20,15 +20,8 @@ export class Scoreboard {
 
     private handleGameModeStarted(): void {
         mod.SetScoreboardType(mod.ScoreboardType.CustomTwoTeams);
-        mod.SetScoreboardHeader(
-            mod.Message(mod.stringkeys.scoreboard.team1),
-            mod.Message(mod.stringkeys.scoreboard.team2)
-        );
-        mod.SetScoreboardColumnNames(
-            mod.Message(mod.stringkeys.scoreboard.score),
-            mod.Message(mod.stringkeys.scoreboard.kills),
-            mod.Message(mod.stringkeys.scoreboard.lives)
-        );
+        mod.SetScoreboardHeader(mod.Message(mod.stringkeys.scoreboard.team1), mod.Message(mod.stringkeys.scoreboard.team2));
+        mod.SetScoreboardColumnNames(mod.Message(mod.stringkeys.scoreboard.score), mod.Message(mod.stringkeys.scoreboard.kills), mod.Message(mod.stringkeys.scoreboard.lives));
         mod.SetScoreboardColumnWidths(1, 1, 1);
     }
 }

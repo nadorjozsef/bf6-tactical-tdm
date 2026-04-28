@@ -1,10 +1,12 @@
 import { Player } from '../entities/player.ts';
 import { Events } from 'bf6-portal-utils/events/index.ts';
 
+type PlayerJoinCallback = (player: Player) => void;
+
 export class PlayerManager {
     private static _instance: PlayerManager | undefined;
     private _players: Player[] = [];
-    private _onPlayerJoinGame?: (player: Player) => void;
+    private _onPlayerJoinGame: PlayerJoinCallback[] = [];
 
     private constructor() {
         Events.OnPlayerJoinGame.subscribe(this.handlePlayerJoinGame.bind(this));
@@ -21,7 +23,9 @@ export class PlayerManager {
     private handlePlayerJoinGame(modPlayer: mod.Player): void {
         const player = new Player(modPlayer);
         this._players.push(player);
-        this._onPlayerJoinGame?.(player);
+        for (const callback of this._onPlayerJoinGame) {
+            callback(player);
+        }
     }
 
     private handlePlayerLeaveGame(playerId: number): void {
@@ -29,10 +33,18 @@ export class PlayerManager {
         if (index !== -1) {
             this._players.splice(index, 1);
         }
+        this.unsubscribePlayerJoinGame(player => player.id === playerId);
     }
 
-    public subscribePlayerJoinGame(callback: (player: Player) => void): void {
-        this._onPlayerJoinGame = callback;
+    public subscribePlayerJoinGame(callback: PlayerJoinCallback): void {
+        this._onPlayerJoinGame.push(callback);
+    }
+
+    public unsubscribePlayerJoinGame(callback: PlayerJoinCallback): void {
+        const index = this._onPlayerJoinGame.indexOf(callback);
+        if (index !== -1) {
+            this._onPlayerJoinGame.splice(index, 1);
+        }
     }
 
     public getPlayer(modPlayer: mod.Player): Player;

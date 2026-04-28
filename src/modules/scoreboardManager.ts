@@ -7,10 +7,7 @@ import { Timers } from 'bf6-portal-utils/timers';
 export class ScoreboardManager {
     private static _instance: ScoreboardManager | undefined;
 
-    private constructor(
-        private _scoreboard: Scoreboard,
-        playerManager: PlayerManager
-    ) {
+    private constructor(private _scoreboard: Scoreboard, playerManager: PlayerManager) {
         playerManager.subscribePlayerJoinGame(this.handlePlayerJoinGame.bind(this));
     }
 
@@ -30,12 +27,12 @@ export class ScoreboardManager {
                 player.livesAccessor()
             );
         });
-        this.initialize(player.modObject);
+        this.initialize(player);
     }
 
-    private initialize(modPlayer: mod.Player): void {
+    private initialize(player: Player): void {
         for (let seconds = 0; seconds <= 5; seconds++) {
-            Timers.setTimeout(() => this._scoreboard.update(modPlayer, 0, 0, 0), seconds * 1000);
+            Timers.setTimeout(() => this._scoreboard.update(player.modObject, 0, 0, 0), seconds * 1000);
         }
     }
 }

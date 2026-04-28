@@ -3,7 +3,6 @@ import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
 import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
 import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
 import { Timers } from 'bf6-portal-utils/timers';
-import { debug } from '../debugTool/adminDebugTool';
 
 interface TeamScoreProps {
     x: number;
@@ -162,6 +161,7 @@ export class GameUI {
             width: 40,
             textColor: UI.COLORS.BF_BLUE_BRIGHT,
             textAlpha: () => alphaSignalAccessor() * 0.75,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
             receiver: modTeam,
@@ -173,6 +173,7 @@ export class GameUI {
             width: 37,
             textColor: UI.COLORS.BF_BLUE_DARK,
             textAlpha: () => alphaSignalAccessor() * 0.75,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
             receiver: modTeam,
@@ -184,6 +185,7 @@ export class GameUI {
             width: 32,
             textColor: UI.COLORS.BF_BLUE_BRIGHT,
             textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: circleContainer,
             receiver: modTeam,
@@ -240,6 +242,7 @@ export class GameUI {
             width: 32,
             textColor: UI.COLORS.BF_RED_BRIGHT,
             textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
             receiver: modTeam,
@@ -297,6 +300,7 @@ export class GameUI {
             width: 32,
             textColor: UI.COLORS.BF_GREY_1,
             textAlpha: () => alphaSignalAccessor() * 0.75 + 0.25,
+            depth: mod.UIDepth.AboveGameUI,
             anchor: mod.UIAnchor.Center,
             parent: squareContainer,
             receiver: modTeam,
@@ -375,6 +379,7 @@ export class GameUI {
             textSize: 34,
             width: 84,
             textColor: props.brightColor,
+            depth: mod.UIDepth.AboveGameUI,
             parent: container,
             receiver: team,
         });
@@ -458,6 +463,7 @@ export class GameUI {
             anchor: mod.UIAnchor.TopCenter,
             bgColor: mod.CreateVector(0.2, 0.2, 0.2),
             visible: true,
+            depth: mod.UIDepth.AboveGameUI,
             bgAlpha: 0,
             bgFill: mod.UIBgFill.None,
             receiver: team,
@@ -472,6 +478,7 @@ export class GameUI {
             visible: true,
             bgFill: mod.UIBgFill.None,
             message: () => mod.Message(mod.stringkeys.gameUI.rightActivePlayersText, leftActivePlayerAccessor()),
+            depth: mod.UIDepth.AboveGameUI,
             textColor: mod.CreateVector(0.4392, 0.9216, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -488,6 +495,7 @@ export class GameUI {
             visible: true,
             bgFill: mod.UIBgFill.None,
             message: () => mod.Message(mod.stringkeys.gameUI.leftActivePlayersText, rightActivePlayerAccessor()),
+            depth: mod.UIDepth.AboveGameUI,
             textColor: mod.CreateVector(1, 0.5137, 0.3804),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -505,6 +513,7 @@ export class GameUI {
             bgAlpha: 1,
             bgFill: mod.UIBgFill.None,
             message: mod.Message(mod.stringkeys.gameUI.activePlayersTextCenter),
+            depth: mod.UIDepth.AboveGameUI,
             textColor: mod.CreateVector(1, 1, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -532,6 +541,7 @@ export class GameUI {
             width: 80,
             visible: true,
             textColor: UI.COLORS.WHITE,
+            depth: mod.UIDepth.AboveGameUI,
             receiver: player,
             parent: livesUI,
         });
@@ -544,6 +554,7 @@ export class GameUI {
             size: { width: 100, height: 50 },
             anchor: mod.UIAnchor.TopCenter,
             visible: true,
+            depth: mod.UIDepth.AboveGameUI,
             bgColor: UI.COLORS.BLACK,
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.Solid,
@@ -555,6 +566,7 @@ export class GameUI {
             anchor: mod.UIAnchor.BottomCenter,
             visible: true,
             message: () => mod.Message(mod.stringkeys.gameUI.reinforcementsTime, nextReinforcementsTimeAccessor()),
+            depth: mod.UIDepth.AboveGameUI,
             textColor: mod.CreateVector(1, 1, 1),
             textSize: 28,
             textAnchor: mod.UIAnchor.Center,
@@ -567,6 +579,7 @@ export class GameUI {
             anchor: mod.UIAnchor.TopCenter,
             visible: true,
             message: mod.Message(mod.stringkeys.gameUI.reinforcementsLabel),
+            depth: mod.UIDepth.AboveGameUI,
             textColor: UI.COLORS.WHITE,
             textSize: 12,
             textAnchor: mod.UIAnchor.Center,
