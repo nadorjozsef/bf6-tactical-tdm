@@ -30,7 +30,8 @@ export class GameUIManager {
         this.showTeamScores(team1, team2);
         this.showTeamScoreBars(team1, team2);
         this.showCapturePoints(team1, team2);
-        this.showNextReinforcementsTime();
+        // this should be independent from teams, but then it is not visible on the deployment screen
+        this.showNextReinforcementsTime(team1, team2);
     }
 
     // todo implement handlePlayerLeaveGame?
@@ -58,13 +59,18 @@ export class GameUIManager {
         this._gameUI.teamScoreBars(team2.modObject, team2.scoreAccessor, team1.scoreAccessor, maxScore);
     }
 
-    private showNextReinforcementsTime(): void {
-        this._gameUI.nextReinforcements(this._reinforcements.nextReinforcementsTimeAccessor);
+    private showNextReinforcementsTime(team1: Team, team2: Team): void {
+        this._gameUI.nextReinforcements(team1.modObject, this._reinforcements.nextReinforcementsTimeAccessor);
+        this._gameUI.nextReinforcements(team2.modObject, this._reinforcements.nextReinforcementsTimeAccessor);
     }
 
     private showCapturePoints(team1: Team, team2: Team): void {
-        const capturePoints = this._capturePointManager.getCapturePoints();
-        this._gameUI.capturePoints(team1.modObject, capturePoints.map(cp => cp.ownerTeamIdAccessor), capturePoints.map(cp => cp.isCapturingAccessor));
-        this._gameUI.capturePoints(team2.modObject, capturePoints.map(cp => cp.ownerTeamIdAccessor), capturePoints.map(cp => cp.isCapturingAccessor));
+        const capturePointsData = this._capturePointManager.getCapturePoints().map(capturePoint => ({
+            ownerTeamIdAccessor: capturePoint.ownerTeamIdAccessor,
+            isCapturingAccessor: capturePoint.isCapturingAccessor,
+        }));
+
+        this._gameUI.capturePoints(team1.modObject, capturePointsData);
+        this._gameUI.capturePoints(team2.modObject, capturePointsData);
     }
 }

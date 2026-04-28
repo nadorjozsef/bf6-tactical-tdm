@@ -18,6 +18,11 @@ interface TeamScoreBarProps {
     maxScore: number;
 }
 
+interface CapturePointData {
+    ownerTeamIdAccessor: SolidUI.Accessor<number>;
+    isCapturingAccessor: SolidUI.Accessor<boolean>;
+}
+
 export class GameUI {
     private static _instance: GameUI | undefined;
 
@@ -30,12 +35,8 @@ export class GameUI {
         return GameUI._instance;
     }
 
-    public capturePoints(
-        modTeam: mod.Team,
-        ownerTeamIdAccessors: SolidUI.Accessor<number>[],
-        isCapturingAccessors: SolidUI.Accessor<boolean>[]
-    ): void {
-        const numberOfCapturePoints = ownerTeamIdAccessors.length;
+    public capturePoints(modTeam: mod.Team, capturePoints: CapturePointData[]): void {
+        const numberOfCapturePoints = capturePoints.length;
         const boxWidth = 32;
         const gap = 20;
         const step = boxWidth + gap;
@@ -57,8 +58,8 @@ export class GameUI {
         for (let i = 0; i < numberOfCapturePoints; i++) {
             this.capturePoint(
                 modTeam,
-                ownerTeamIdAccessors[i],
-                isCapturingAccessors[i],
+                capturePoints[i].ownerTeamIdAccessor,
+                capturePoints[i].isCapturingAccessor,
                 letters[i],
                 capturePointXPositions[i]
             );
@@ -112,24 +113,24 @@ export class GameUI {
         const redCapturePoint = this.redCapturePoint(modTeam, mainContainer, alphaSignal, letter);
 
         SolidUI.createEffect(() => {
-            if (ownerTeamIdAccessor() == 0) {
+            if (ownerTeamIdAccessor() === 0) {
                 blueCapturePoint.hide();
                 redCapturePoint.hide();
                 grayCapturePoint.show();
-            } else if (ownerTeamIdAccessor() == 1) {
+            } else if (ownerTeamIdAccessor() === 1) {
                 if (mod.GetObjId(modTeam) === 1) {
                     blueCapturePoint.show();
                     redCapturePoint.hide();
-                } else if (mod.GetObjId(modTeam) == 2) {
+                } else if (mod.GetObjId(modTeam) === 2) {
                     blueCapturePoint.hide();
                     redCapturePoint.show();
                 }
                 grayCapturePoint.hide();
-            } else if (ownerTeamIdAccessor() == 2) {
-                if (mod.GetObjId(modTeam) == 1) {
+            } else if (ownerTeamIdAccessor() === 2) {
+                if (mod.GetObjId(modTeam) === 1) {
                     blueCapturePoint.hide();
                     redCapturePoint.show();
-                } else if (mod.GetObjId(modTeam) == 2) {
+                } else if (mod.GetObjId(modTeam) === 2) {
                     blueCapturePoint.show();
                     redCapturePoint.hide();
                 }
@@ -548,7 +549,7 @@ export class GameUI {
         return livesUI;
     }
 
-    public nextReinforcements(nextReinforcementsTimeAccessor: SolidUI.Accessor<number>): UIContainer {
+    public nextReinforcements(team: mod.Team, nextReinforcementsTimeAccessor: SolidUI.Accessor<number>): UIContainer {
         const reinforcementsTimerContainer = SolidUI.h(UIContainer, {
             position: { x: 550, y: 20 },
             size: { width: 100, height: 50 },
@@ -558,6 +559,7 @@ export class GameUI {
             bgColor: UI.COLORS.BLACK,
             bgAlpha: 0.75,
             bgFill: mod.UIBgFill.Solid,
+            receiver: team,
         });
 
         SolidUI.h(UIText, {
