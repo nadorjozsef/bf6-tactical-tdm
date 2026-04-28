@@ -10,7 +10,7 @@ import { ScoreboardManager } from './modules/scoreboardManager.ts';
 
 const gameUI = GameUI.getInstance();
 const playerManager = PlayerManager.getInstance();
-const scoreboard = Scoreboard.getInstance(playerManager);
+const scoreboard = Scoreboard.getInstance();
 const teamManager = TeamManager.getInstance();
 const reinforcements = Reinforcements.getInstance();
 const capturePointManager = CapturePointManager.getInstance();
@@ -18,8 +18,7 @@ const gameModeManager = GameMode.GetInstance(
     playerManager,
     teamManager,
     capturePointManager,
-    reinforcements,
-    scoreboard
+    reinforcements
 );
 ScoreboardManager.getInstance(scoreboard, playerManager);
 GameUIManager.getInstance(gameUI, playerManager, teamManager, capturePointManager, reinforcements, gameModeManager);
