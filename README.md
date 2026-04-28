@@ -1,17 +1,35 @@
 ﻿## Battlefield 6 Portal Generic Template
 
-This repo is a ready-made template for starting Battlefield 6 Portal development.
+This is a ready-made template for starting Battlefield 6 Portal development. It’s built as a thin, structured layer on
+top of `bf6-portal-utils`, that gives you a clean, object-oriented structure plus a set of core gameplay mechanics out
+of the box.
 
-It’s built as a thin, structured layer on top of `bf6-portal-utils`, and gives you a clean, object-oriented structure
-plus a set of core gameplay mechanics out of the box.
+## Why use this template?
 
-## Benefits
+- **Solid starting feature set**: included familiar UI elements, handling of capture points, team/player state, and a
+  scoreboard.
+- **Grows with your mod**: object-oriented structure that stays readable as your project expands.
+- **Easy to extend**: clear separation of concerns and event-driven modules.
+- **Reusable UI layer**: UI is driven by accessors/signals instead of being hard-wired to game logic.
 
-- **Fully object-oriented**: scales from small prototypes to larger projects without turning into a single-file script.
-- **UI is fully separated from business logic**: the UI layer only consumes reactive accessors/signals and doesn’t need
-  to know where the values come from.
-- **Core gameplay mechanics included**: teams, players, capture points, scoreboard wiring.
-- **Easy to extend and maintain**: clear responsibilities, event-driven managers, minimal coupling.
+## Getting started
+
+```sh
+git clone https://github.com/nadorjozsef/bf6-tactical-tdm.git
+cd bf6-tactical-tdm
+npm init
+npm run build
+```
+
+After the build completes, you copy the contents of the `dist/` folder into the Script editor on the Battlefield Portal
+website. For more info about building and deployment workflows, see: https://github.com/deluca-mike/bf6-portal-bundler
+
+## Create your own Portal mod
+
+1. **Start with game logic**: adapt `src/modules/gameMode.ts` and implement your new rules/event handling.
+2. **Extend the data model if needed**: add new properties to `src/entities/*` (`Player`, `Team`, `CapturePoint`).
+3. **Add UI elements if needed**: implement new UI widgets in `src/ui/gameUI.ts`.
+4. **Wire UI to state**: connect entity accessors to UI widgets via `src/ui/gameUIManager.ts`.
 
 ## Architecture
 
