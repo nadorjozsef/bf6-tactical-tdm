@@ -3,7 +3,6 @@ import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
 import { PlayerManager } from './playerManager.ts';
 import { TeamManager } from './teamManager.ts';
 import type { Reinforcements } from './reinforcements.ts';
-import { Scoreboard } from './scoreboard.ts';
 import type { Player } from '../entities/player.ts';
 import type { Team } from '../entities/team.ts';
 import { convertArray } from '../helpers/index.ts';
@@ -20,8 +19,7 @@ export class GameMode {
         private _playerManager: PlayerManager,
         private _teamManager: TeamManager,
         private _capturePointManager: CapturePointManager,
-        private _reinforcements: Reinforcements,
-        private _scoreboard: Scoreboard
+        private _reinforcements: Reinforcements
     ) {
         Events.OnPlayerUndeploy.subscribe(this.handlePlayerUndeploy.bind(this));
         Events.OnPlayerDeployed.subscribe(this.handlePlayerDeployed.bind(this));
@@ -35,17 +33,10 @@ export class GameMode {
         playerManager: PlayerManager,
         teamManager: TeamManager,
         capturePointManager: CapturePointManager,
-        reinforcements: Reinforcements,
-        scoreboard: Scoreboard
+        reinforcements: Reinforcements
     ): GameMode {
         if (!GameMode._instance) {
-            GameMode._instance = new GameMode(
-                playerManager,
-                teamManager,
-                capturePointManager,
-                reinforcements,
-                scoreboard
-            );
+            GameMode._instance = new GameMode(playerManager, teamManager, capturePointManager, reinforcements);
         }
         return GameMode._instance;
     }
@@ -114,9 +105,6 @@ export class GameMode {
 
     private handlePlayerDeployed(modPlayer: mod.Player): void {
         this.updateActivePlayers();
-        // if (mod.IsSoldierClass(modPlayer, mod.SoldierClass.Recon)) {
-        //     mod.SetTeam(modPlayer, mod.GetTeam(2));
-        // }
     }
 
     private handlePlayerUndeploy(modPlayer: mod.Player): void {
