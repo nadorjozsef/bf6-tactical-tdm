@@ -39,7 +39,13 @@ export class GameMode {
         scoreboard: Scoreboard
     ): GameMode {
         if (!GameMode._instance) {
-            GameMode._instance = new GameMode(playerManager, teamManager, capturePointManager, reinforcements, scoreboard);
+            GameMode._instance = new GameMode(
+                playerManager,
+                teamManager,
+                capturePointManager,
+                reinforcements,
+                scoreboard
+            );
         }
         return GameMode._instance;
     }
@@ -63,14 +69,13 @@ export class GameMode {
         this.updateActivePlayers();
         this.reduceTimeIfNoActivePlayer();
         if (modPlayer === victim) {
-            return
-        };
+            return;
+        }
         const player = this._playerManager.getPlayer(modPlayer);
         const team1 = this._teamManager.getTeam(1);
         const team2 = this._teamManager.getTeam(2);
         this.updateTeamScore(player, team1, team2);
         this.updatePlayerScore(player);
-        this._scoreboard.update(modPlayer);
 
         // Todo: set winning, losing teams?, repeat?
         if (team1.score === this.GAME_MODE_TARGET_SCORE - 5 || team2.score === this.GAME_MODE_TARGET_SCORE - 5) {
@@ -99,7 +104,6 @@ export class GameMode {
     private handleReinforcementsArrived(): void {
         for (const player of this._playerManager.getAllPlayers()) {
             player.lives = player.lives + 1;
-            this._scoreboard.update(player.modObject);
         }
         mod.EnableAllPlayerDeploy(true);
         Sounds.Sound2D.play(this.SOUND_LOOP_2D, {
@@ -124,7 +128,6 @@ export class GameMode {
             mod.EnablePlayerDeploy(modPlayer, false);
         }
         this.updateActivePlayers();
-        this._scoreboard.update(modPlayer);
     }
 
     private reduceTimeIfNoActivePlayer() {
