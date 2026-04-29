@@ -172,3 +172,121 @@ team.score = team.score + 1;
 ```
 
 …`scoreAccessor()` returns the new value and the UI text updates automatically.
+
+## API reference
+
+This template isn’t published as an npm library—your “public API” is the set of classes you instantiate/use from inside
+your own Portal script (typically from `src/index.ts`). Below is a quick reference of the main classes and their
+callable surfaces.
+
+### Entities (`src/entities/*`)
+
+#### `Player` (`src/entities/player.ts`)
+
+Per-player state wrapper around `mod.Player`, with SolidUI accessors for reactive UI/scoreboard updates.
+
+- `constructor(modPlayer: mod.Player)`
+- `id: number` _(getter)_
+- `modObject: mod.Player` _(getter)_
+- `teamId: number` _(getter)_
+- `isAlive: boolean` _(getter)_
+- `livesAccessor: SolidUI.Accessor<number>` _(getter)_
+- `lives: number` _(getter/setter)_
+- `scoreAccessor: SolidUI.Accessor<number>` _(getter)_
+- `score: number` _(getter/setter)_
+- `killsAccessor: SolidUI.Accessor<number>` _(getter)_
+- `kills: number` _(getter/setter)_
+
+#### `Team` (`src/entities/team.ts`)
+
+Per-team state wrapper around `mod.Team`, used for team score and derived counters like alive/active players.
+
+- `constructor(modTeam: mod.Team)`
+- `id: number` _(getter)_
+- `modObject: mod.Team` _(getter)_
+- `scoreAccessor: SolidUI.Accessor<number>` _(getter)_
+- `score: number` _(getter/setter)_
+- `activePlayersAccessor: SolidUI.Accessor<number>` _(getter)_
+- `activePlayers: number` _(getter/setter)_
+
+#### `CapturePoint` (`src/entities/capturePoint.ts`)
+
+Capture-point state wrapper around `mod.CapturePoint`, tracking owner and “capturing” status for objective UI.
+
+- `constructor(modCapturePoint: mod.CapturePoint)`
+- `id: number` _(getter)_
+- `modObject: mod.CapturePoint` _(getter)_
+- `ownerTeamIdAccessor: SolidUI.Accessor<number>` _(getter)_
+- `ownerTeamId: number` _(getter/setter)_
+- `isCapturingAccessor: SolidUI.Accessor<boolean>` _(getter)_
+- `isCapturing: boolean` _(getter/setter)_
+
+### Modules (`src/modules/*`)
+
+#### `PlayerManager` (`src/modules/playerManager.ts`)
+
+Player registry and lookup helpers, created once and kept in sync via Portal join/leave events.
+
+- `static getInstance(): PlayerManager`
+- `subscribePlayerJoinGame(callback: (player: Player) => void): void`
+- `getPlayer(modPlayer: mod.Player): Player`
+- `getPlayer(playerId: number): Player`
+- `getPlayers(modPlayers: mod.Player[]): Player[]`
+- `getAllPlayers(): Player[]`
+
+#### `TeamManager` (`src/modules/teamManager.ts`)
+
+Team registry and lookup helpers, initialized at game start.
+
+- `static getInstance(): TeamManager`
+- `getTeam(modTeam: mod.Team): Team`
+- `getTeam(teamId: number): Team`
+
+#### `CapturePointManager` (`src/modules/capturePointManager.ts`)
+
+Capture-point registry that wires Portal capture events into `CapturePoint` entity state.
+
+- `static getInstance(): CapturePointManager`
+- `getCapturePoints(): CapturePoint[]`
+- `getCapturePoint(modCapturePoint: mod.CapturePoint): CapturePoint`
+- `getCapturePoint(capturePointId: number): CapturePoint`
+
+#### `Scoreboard` (`src/modules/scoreboard.ts`)
+
+Custom scoreboard configuration + a single update method to push per-player values.
+
+- `static getInstance(): Scoreboard`
+- `update(modPlayer: mod.Player, score: number, kills: number, lives: number): void`
+
+#### `ScoreboardManager` (`src/modules/scoreboardManager.ts`)
+
+Wiring layer that binds `Player` accessors into `Scoreboard.update()` using a SolidUI effect.
+
+- `static getInstance(scoreboard: Scoreboard, playerManager: PlayerManager): ScoreboardManager`
+
+#### `GameMode` (`src/modules/gameMode.ts`)
+
+Contains the custom game mode logic.
+
+- `static GetInstance(playerManager: PlayerManager, teamManager: TeamManager, capturePointManager: CapturePointManager, reinforcements: Reinforcements): GameMode`
+- `GAME_MODE_TARGET_SCORE: number` _(field; read by UI wiring)_
+
+### UI (`src/ui/*`)
+
+#### `GameUI` (`src/ui/gameUI.ts`)
+
+Stateless UI builder that renders HUD widgets from SolidUI accessors (no rules/state ownership).
+
+- `static getInstance(): GameUI`
+- `capturePoints(modTeam: mod.Team, ownerTeamIdAccessors: SolidUI.Accessor<number>[], isCapturingAccessors: SolidUI.Accessor<boolean>[]): void`
+- `teamScores(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>): void`
+- `teamScoreBars(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>, maxScore: number): void`
+- `activePlayers(modTeam: mod.Team, leftActivePlayerAccessor: SolidUI.Accessor<number>, rightActivePlayerAccessor: SolidUI.Accessor<number>): UIContainer`
+- `playerLives(player: mod.Player, livesAccessor: SolidUI.Accessor<number>): UIContainer`
+- `nextReinforcements(team: mod.Team, nextReinforcementsTimeAccessor: SolidUI.Accessor<number>): UIContainer`
+
+#### `GameUIManager` (`src/ui/gameUIManager.ts`)
+
+UI wiring layer that bridges entities/modules → `GameUI` methods at game start and when players join.
+
+- `static getInstance(gameUI: GameUI, playerManager: PlayerManager, teamManager: TeamManager, capturePointManager: CapturePointManager, reinforcements: Reinforcements, gameMode: GameMode): GameUIManager`
