@@ -57,9 +57,6 @@ The repo currently includes several module folders under `src/modules`:
     - Configures and updates the scoreboard.
     - Keeps scoreboard logic separate from game rules.
 
-- `reinforcement`
-    - Tracks reinforcement timing and exposes state used by UI and game rules.
-
 - `gameUI`
     - Renders UI elements from accessors.
     - Wires game state to UI components without embedding game logic in the UI layer.
@@ -238,7 +235,7 @@ Wiring layer that binds `Player` accessors into `Scoreboard.update()` using a So
 
 Contains the custom game mode logic.
 
-- `static GetInstance(playerManager: PlayerManager, teamManager: TeamManager, capturePointManager: CapturePointManager, reinforcements: Reinforcements): GameMode`
+- `static GetInstance(playerManager: PlayerManager, teamManager: TeamManager): GameMode`
 - `GAME_MODE_TARGET_SCORE: number` _(field; read by UI wiring)_
 
 ### UI (`src/modules/gameUI/*`)
@@ -251,12 +248,9 @@ Stateless UI builder that renders HUD widgets from SolidUI accessors (no rules/s
 - `capturePoints(modTeam: mod.Team, ownerTeamIdAccessors: SolidUI.Accessor<number>[], isCapturingAccessors: SolidUI.Accessor<boolean>[]): void`
 - `teamScores(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>): void`
 - `teamScoreBars(modTeam: mod.Team, teamScoreAccessor: SolidUI.Accessor<number>, opponentScoreAccessor: SolidUI.Accessor<number>, maxScore: number): void`
-- `activePlayers(modTeam: mod.Team, leftActivePlayerAccessor: SolidUI.Accessor<number>, rightActivePlayerAccessor: SolidUI.Accessor<number>): UIContainer`
-- `playerLives(player: mod.Player, livesAccessor: SolidUI.Accessor<number>): UIContainer`
-- `nextReinforcements(team: mod.Team, nextReinforcementsTimeAccessor: SolidUI.Accessor<number>): UIContainer`
 
 #### `GameUIManager` (`src/modules/gameUI/gameUIManager.ts`)
 
-UI wiring layer that bridges entities/modules → `GameUI` methods at game start and when players join.
+UI wiring layer that bridges entities/modules → `GameUI` methods at game start.
 
-- `static getInstance(gameUI: GameUI, playerManager: PlayerManager, teamManager: TeamManager, capturePointManager: CapturePointManager, reinforcements: Reinforcements, gameMode: GameMode): GameUIManager`
+- `static getInstance(gameUI: GameUI, teamManager: TeamManager, capturePointManager: CapturePointManager, gameMode: GameMode): GameUIManager`

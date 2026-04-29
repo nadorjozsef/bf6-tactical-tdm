@@ -1,42 +1,30 @@
 import { Events } from 'bf6-portal-utils/events';
-import { Sounds } from 'bf6-portal-utils/sounds';
 import { PlayerManager } from '../player/playerManager';
 import { TeamManager } from '../team/teamManager';
-import type { Reinforcements } from '../reinforcement/reinforcements';
 import type { Player } from '../player/player';
 import type { Team } from '../team/team';
 import { convertArray } from '../../helpers';
-import { CapturePointManager } from '../capturePoint/capturePointManager';
 
 export class GameMode {
     private static _instance: GameMode | undefined;
-
     public GAME_MODE_TARGET_SCORE = 50;
     private GAME_MODE_TIMELIMIT = 600;
-    private SOUND_LOOP_2D = mod.RuntimeSpawn_Common.SFX_UI_EOR_RankUp_Normal_OneShot2D;
 
     private constructor(
         private _playerManager: PlayerManager,
-        private _teamManager: TeamManager,
-        private _capturePointManager: CapturePointManager,
-        private _reinforcements: Reinforcements
+        private _teamManager: TeamManager
     ) {
-        Events.OnPlayerUndeploy.subscribe(this.handlePlayerUndeploy.bind(this));
-        Events.OnPlayerDeployed.subscribe(this.handlePlayerDeployed.bind(this));
         Events.OnGameModeStarted.subscribe(this.handleGameModeStarted.bind(this));
         Events.OnPlayerEarnedKill.subscribe(this.handlePlayerEarnedKill.bind(this));
         Events.OnCapturePointCaptured.subscribe(this.handleCapturePointCaptured.bind(this));
-        _reinforcements.subscribeReinforcementsArrived(this.handleReinforcementsArrived.bind(this));
     }
 
     static GetInstance(
         playerManager: PlayerManager,
-        teamManager: TeamManager,
-        capturePointManager: CapturePointManager,
-        reinforcements: Reinforcements
+        teamManager: TeamManager
     ): GameMode {
         if (!GameMode._instance) {
-            GameMode._instance = new GameMode(playerManager, teamManager, capturePointManager, reinforcements);
+            GameMode._instance = new GameMode(playerManager, teamManager);
         }
         return GameMode._instance;
     }
@@ -57,8 +45,6 @@ export class GameMode {
     }
 
     private handlePlayerEarnedKill(modPlayer: mod.Player, victim: mod.Player): void {
-        this.updateActivePlayers();
-        this.reduceTimeIfNoActivePlayer();
         if (modPlayer === victim) {
             return;
         }
@@ -90,55 +76,5 @@ export class GameMode {
     private updatePlayerScore(player: Player) {
         player.kills++;
         player.score += 100;
-    }
-
-    private handleReinforcementsArrived(): void {
-        for (const player of this._playerManager.getAllPlayers()) {
-            player.lives = player.lives + 1;
-        }
-        mod.EnableAllPlayerDeploy(true);
-        Sounds.Sound2D.play(this.SOUND_LOOP_2D, {
-            amplitude: 1,
-            duration: 2000,
-        });
-    }
-
-    private handlePlayerDeployed(modPlayer: mod.Player): void {
-        this.updateActivePlayers();
-    }
-
-    private handlePlayerUndeploy(modPlayer: mod.Player): void {
-        const player = this._playerManager.getPlayer(modPlayer);
-        if (player.lives >= 1) {
-            player.lives--;
-        }
-        if (player.lives <= 0) {
-            mod.EnablePlayerDeploy(modPlayer, false);
-        }
-        this.updateActivePlayers();
-    }
-
-    private reduceTimeIfNoActivePlayer() {
-        if (this._teamManager.getTeam(1).activePlayers === 0 || this._teamManager.getTeam(2).activePlayers === 0) {
-            this._reinforcements.reduceTime();
-        }
-    }
-
-    private updateActivePlayers() {
-        let team1ActivePlayers = 0;
-        let team2ActivePlayers = 0;
-        for (const player of this._playerManager.getAllPlayers()) {
-            const teamId = player.teamId;
-            const isAlive = player.isAlive;
-            if (isAlive) {
-                if (teamId === 1) {
-                    team1ActivePlayers++;
-                } else if (teamId === 2) {
-                    team2ActivePlayers++;
-                }
-            }
-        }
-        this._teamManager.getTeam(1).activePlayers = team1ActivePlayers;
-        this._teamManager.getTeam(2).activePlayers = team2ActivePlayers;
     }
 }
