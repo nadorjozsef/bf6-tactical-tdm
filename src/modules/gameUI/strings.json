@@ -1,11 +1,4 @@
 {
-    "scoreboard": {
-        "lives": "Lives",
-        "score": "Score",
-        "kills": "Kills",
-        "team1": "Team 1",
-        "team2": "Team 2"
-    },
     "gameUI": {
         "lifeCount": "Life: {}",
         "reinforcementsLabel": "Reinforcements",

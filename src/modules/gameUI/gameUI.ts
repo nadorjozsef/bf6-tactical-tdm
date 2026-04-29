@@ -1,7 +1,7 @@
-import { UI } from 'bf6-portal-utils/ui/index.ts';
-import { UIContainer } from 'bf6-portal-utils/ui/components/container/index.ts';
-import { UIText } from 'bf6-portal-utils/ui/components/text/index.ts';
-import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
+import { UI } from 'bf6-portal-utils/ui';
+import { UIContainer } from 'bf6-portal-utils/ui/components/container';
+import { UIText } from 'bf6-portal-utils/ui/components/text';
+import { SolidUI } from 'bf6-portal-utils/solid-ui';
 import { Timers } from 'bf6-portal-utils/timers';
 
 interface TeamScoreProps {

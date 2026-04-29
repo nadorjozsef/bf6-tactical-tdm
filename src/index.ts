@@ -1,14 +1,13 @@
-import { GameMode } from './modules/gameMode.ts';
-import { GameUI } from './ui/gameUI.ts';
-import { PlayerManager } from './modules/playerManager.ts';
-import { TeamManager } from './modules/teamManager.ts';
-import { Reinforcements } from './modules/reinforcements.ts';
-import { Scoreboard } from './modules/scoreboard.ts';
-import { CapturePointManager } from './modules/capturePointManager.ts';
-import { GameUIManager } from './ui/gameUIManager.ts';
-import { ScoreboardManager } from './modules/scoreboardManager.ts';
+import { GameMode } from './modules/gameMode/gameMode.ts';
+import { GameUI } from './modules/gameUI/gameUI.ts';
+import { PlayerManager } from './modules/player/playerManager.ts';
+import { TeamManager } from './modules/team/teamManager.ts';
+import { Reinforcements } from './modules/reinforcement/reinforcements.ts';
+import { Scoreboard } from './modules/scoreboard/scoreboard.ts';
+import { CapturePointManager } from './modules/capturePoint/capturePointManager.ts';
+import { GameUIManager } from './modules/gameUI/gameUIManager.ts';
+import { ScoreboardManager } from './modules/scoreboard/scoreboardManager.ts';
 import { debug } from './debugTool/adminDebugTool.ts';
-
 
 const gameUI = GameUI.getInstance();
 const playerManager = PlayerManager.getInstance();

@@ -1,4 +1,4 @@
-import { Events } from 'bf6-portal-utils/events/index.ts';
+import { Events } from 'bf6-portal-utils/events';
 
 export class Scoreboard {
     private static _instance: Scoreboard | undefined;

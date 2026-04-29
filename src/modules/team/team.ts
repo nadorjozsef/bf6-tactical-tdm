@@ -1,4 +1,4 @@
-import { SolidUI } from 'bf6-portal-utils/solid-ui/index.ts';
+import { SolidUI } from 'bf6-portal-utils/solid-ui';
 
 export class Team {
     private _scoreSignal = SolidUI.createSignal(0);

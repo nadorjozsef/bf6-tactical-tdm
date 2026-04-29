@@ -1,12 +1,12 @@
-import { Events } from 'bf6-portal-utils/events/index.ts';
-import { Sounds } from 'bf6-portal-utils/sounds/index.ts';
-import { PlayerManager } from './playerManager.ts';
-import { TeamManager } from './teamManager.ts';
-import type { Reinforcements } from './reinforcements.ts';
-import type { Player } from '../entities/player.ts';
-import type { Team } from '../entities/team.ts';
-import { convertArray } from '../helpers/index.ts';
-import { CapturePointManager } from './capturePointManager.ts';
+import { Events } from 'bf6-portal-utils/events';
+import { Sounds } from 'bf6-portal-utils/sounds';
+import { PlayerManager } from '../player/playerManager';
+import { TeamManager } from '../team/teamManager';
+import type { Reinforcements } from '../reinforcement/reinforcements';
+import type { Player } from '../player/player';
+import type { Team } from '../team/team';
+import { convertArray } from '../../helpers';
+import { CapturePointManager } from '../capturePoint/capturePointManager';
 
 export class GameMode {
     private static _instance: GameMode | undefined;

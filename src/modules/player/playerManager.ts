@@ -1,5 +1,5 @@
-import { Player } from '../entities/player.ts';
-import { Events } from 'bf6-portal-utils/events/index.ts';
+import { Player } from './player';
+import { Events } from 'bf6-portal-utils/events';
 
 type PlayerJoinCallback = (player: Player) => void;
 

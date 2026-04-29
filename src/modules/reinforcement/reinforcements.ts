@@ -1,6 +1,6 @@
-import { Clocks } from "bf6-portal-utils/clocks/index.ts";
-import { Events } from "bf6-portal-utils/events/index.ts";
-import { SolidUI } from "bf6-portal-utils/solid-ui/index.ts";
+import { Clocks } from "bf6-portal-utils/clocks";
+import { Events } from "bf6-portal-utils/events";
+import { SolidUI } from "bf6-portal-utils/solid-ui";
 
 export class Reinforcements {
     private DEFAULT_REINFORCEMENTS_TIME = 120;

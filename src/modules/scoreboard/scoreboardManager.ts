@@ -1,6 +1,6 @@
-import type { PlayerManager } from './playerManager';
-import type { Player } from '../entities/player';
-import type { Scoreboard } from './scoreboard';
+import type { PlayerManager } from '../player/playerManager';
+import type { Player } from '../player/player';
+import type { Scoreboard } from '../scoreboard/scoreboard';
 import { SolidUI } from 'bf6-portal-utils/solid-ui';
 import { Timers } from 'bf6-portal-utils/timers';
 

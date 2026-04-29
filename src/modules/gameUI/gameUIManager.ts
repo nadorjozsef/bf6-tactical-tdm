@@ -1,12 +1,12 @@
 import { Events } from "bf6-portal-utils/events";
-import type { GameUI } from "./gameUI";
-import type { TeamManager } from "../modules/teamManager";
-import { PlayerManager } from "../modules/playerManager";
-import type { Player } from "../entities/player";
-import type { Team } from "../entities/team";
-import type { CapturePointManager } from "../modules/capturePointManager";
-import type { Reinforcements } from "../modules/reinforcements";
-import type { GameMode } from "../modules/gameMode";
+import type { GameUI } from "../gameUI/gameUI";
+import type { TeamManager } from "../team/teamManager";
+import { PlayerManager } from "../player/playerManager";
+import type { Player } from "../player/player";
+import type { Team } from "../team/team";
+import type { CapturePointManager } from "../capturePoint/capturePointManager";
+import type { Reinforcements } from "../reinforcement/reinforcements";
+import type { GameMode } from "../gameMode/gameMode";
 
 export class GameUIManager {
     private static _instance: GameUIManager | undefined;

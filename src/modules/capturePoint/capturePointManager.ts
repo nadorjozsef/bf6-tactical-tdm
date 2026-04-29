@@ -1,6 +1,6 @@
-import { Events } from "bf6-portal-utils/events/index.ts";
-import { CapturePoint } from "../entities/capturePoint.ts";
-import { convertArray } from "../helpers/index.ts";
+import { Events } from "bf6-portal-utils/events";
+import { CapturePoint } from "./capturePoint";
+import { convertArray } from "../../helpers";
 
 export class CapturePointManager {
     private static _instance: CapturePointManager | undefined;

@@ -1,5 +1,5 @@
-import { Events } from "bf6-portal-utils/events/index.ts";
-import { Team } from "../entities/team.ts";
+import { Events } from "bf6-portal-utils/events";
+import { Team } from "../team/team";
 
 export class TeamManager {
     private static _instance: TeamManager | undefined;
