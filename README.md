@@ -1,4 +1,4 @@
-﻿## Battlefield 6 Portal Generic Template
+﻿## Battlefield 6 Portal Tactical TDM mod
 
 This is a ready-made template for starting Battlefield 6 Portal development. It’s built as a thin, structured layer on
 top of `bf6-portal-utils`, that gives you a clean, object-oriented structure plus a set of core gameplay mechanics out
